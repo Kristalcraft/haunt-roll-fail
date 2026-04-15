@@ -1,3 +1,21 @@
+// FILE: vast/meta.scala
+// VERSION: 0.1.0
+// START_MODULE_CONTRACT
+// PURPOSE: Register Vast in the shared HRF runtime and define the public factories, validation, assets, and bot bindings.
+// SCOPE: Validate faction combinations, create Game instances, delegate serialization, select bots, and expose assets.
+// DEPENDS: vast.Game, vast.Serialize, vast.BotKnight, vast.BotDragon, vast.BotXX, hrf.meta.MetaGame
+// LINKS: M-VAST-META, M-VAST-GAME, M-VAST-SERIALIZE, M-VAST-BOT, M-VAST-UI
+// ROLE: RUNTIME
+// MAP_MODE: EXPORTS
+// END_MODULE_CONTRACT
+//
+// START_MODULE_MAP
+// Meta - public Vast metadata entry point used by the shared HRF runtime
+// END_MODULE_MAP
+//
+// START_CHANGE_SUMMARY
+// LAST_CHANGE: v0.1.0 - Added initial GRACE contracts, semantic blocks, and stable log markers for the first governed Vast wave.
+// END_CHANGE_SUMMARY
 package vast
 //
 //
@@ -15,6 +33,10 @@ import hrf.elem._
 
 object Meta extends MetaGame {
     val gaming = vast.gaming
+
+    private def logMarker(scope : String, block : String, message : String) : Unit = {
+        +++("[VastMeta][" + scope + "][" + block + "] " + message)
+    }
 
     type F = Faction
 
@@ -40,10 +62,23 @@ object Meta extends MetaGame {
         n.head + " " + c.head + " " + n.last
     }
 
-    def validateFactionCombination(ff : $[Faction]) = InfoResult("Vast") &&
-        (ff.has(Thief)).?(ErrorResult("Thief not implemented yet")) &&
-        (ff.num < 4).?(ErrorResult("Select at least four factions")) &&
-        (ff.num > 4).?(ErrorResult("Max four factions"))
+    // START_CONTRACT: validateFactionCombination
+    // PURPOSE: Validate whether the requested faction list is supported before game creation.
+    // INPUTS: { ff: $[Faction] - requested faction list }
+    // OUTPUTS: { InfoResult - success or explicit validation error chain }
+    // SIDE_EFFECTS: console log marker for verification
+    // LINKS: M-VAST-META, V-M-VAST-META
+    // END_CONTRACT: validateFactionCombination
+    def validateFactionCombination(ff : $[Faction]) = {
+        // START_BLOCK_VALIDATE_FACTIONS
+        logMarker("validateFactions", "BLOCK_VALIDATE_FACTIONS", "requested=" + ff./(_.short).mkString(","))
+        val result = InfoResult("Vast") &&
+            (ff.has(Thief)).?(ErrorResult("Thief not implemented yet")) &&
+            (ff.num < 4).?(ErrorResult("Select at least four factions")) &&
+            (ff.num > 4).?(ErrorResult("Max four factions"))
+        // END_BLOCK_VALIDATE_FACTIONS
+        result
+    }
 
     def validateFactionSeatingOptions(ff : $[Faction], options : $[O]) = None ||
         (ff.intersect(factions) != factions.intersect(ff)).?(ErrorResult("Incorrect faction order")) |
@@ -56,7 +91,19 @@ object Meta extends MetaGame {
     // override def glyph(f : F) : |[String] = |(f.style + "-glyph")
     // override def glyph(g : G, f : F) : |[String] = glyph(f).%!(_ => g.highlightFaction.has(f) && hrf.HRF.uptime() / 1000 % 2 == 1)
 
-    def createGame(factions : $[Faction], options : $[O]) = new Game(factions, options)
+    // START_CONTRACT: createGame
+    // PURPOSE: Build a new Vast Game instance from validated factions and options.
+    // INPUTS: { factions: $[Faction] - active factions, options: $[O] - selected game options }
+    // OUTPUTS: { Game - initialized Vast game object }
+    // SIDE_EFFECTS: console log marker for creation attempts
+    // LINKS: M-VAST-META, M-VAST-GAME
+    // END_CONTRACT: createGame
+    def createGame(factions : $[Faction], options : $[O]) = {
+        // START_BLOCK_CREATE_GAME
+        logMarker("createGame", "BLOCK_CREATE_GAME", "factions=" + factions./(_.short).mkString(",") + " options=" + options.num)
+        new Game(factions, options)
+        // END_BLOCK_CREATE_GAME
+    }
 
     def getBots(f : Faction) = $("Easy")
 
@@ -164,7 +211,6 @@ object Meta extends MetaGame {
         ImageAsset("dragon-sleeping" ) ::
         ImageAsset("chest" ) ::
         ImageAsset("chest-highlight" ) ::
-        ImageAsset("treasure" ) ::
         ImageAsset("event" ) ::
         ImageAsset("ambush" ) ::
         ImageAsset("crystal" ) ::

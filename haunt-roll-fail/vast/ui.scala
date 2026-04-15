@@ -181,7 +181,7 @@ class UI(val uir : ElementAttachmentPoint, arity : Int, val resources : Resource
 
                 l.indexed.foreach { (t, k) =>
                     val s = t @@ {
-                        case Chest => "treasure"
+                        case Chest => "chest"
                         case DragonGem(_, power) => "gem-" + power.id
                     }
 

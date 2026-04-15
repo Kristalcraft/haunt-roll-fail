@@ -1,3 +1,21 @@
+// FILE: vast/game.scala
+// VERSION: 0.1.0
+// START_MODULE_CONTRACT
+// PURPOSE: Implement the authoritative Vast game state machine, including setup, action resolution, state validation, and game progression.
+// SCOPE: Own runtime state, apply Actions to produce Continue values, maintain board/faction invariants, and emit player-facing logs.
+// DEPENDS: vast.meta, vast.styles, hrf.base, hrf.logger, hrf.ui
+// LINKS: M-VAST-GAME, M-VAST-META, M-VAST-RULES, M-VAST-UI, M-VAST-SERIALIZE
+// ROLE: RUNTIME
+// MAP_MODE: EXPORTS
+// END_MODULE_CONTRACT
+//
+// START_MODULE_MAP
+// Game - authoritative Vast runtime state and action-resolution engine
+// END_MODULE_MAP
+//
+// START_CHANGE_SUMMARY
+// LAST_CHANGE: v0.1.0 - Added initial GRACE contracts, semantic blocks, and stable log markers around core action execution.
+// END_CHANGE_SUMMARY
 package vast
 //
 //
@@ -1183,7 +1201,7 @@ case class AttackRollAction(self : Knight.type, e : AttackTarget, q : |[Equipmen
 case class MightyAxeAction(self : Knight.type, e : AttackTarget, q : |[Equipment], then : ForcedAction) extends BaseAction(MightyAxe)("Use", MightyAxe, dt.Discard, dt.Arrow, "+1".hl, "damage")
 
 
-case class CollectChestAction(self : Knight.type) extends BaseAction(Image("treasure", styles.illustration))("Take", Chest)
+case class CollectChestAction(self : Knight.type) extends BaseAction(Image("chest", styles.illustration))("Take", Chest)
 case class DrawTreasureAction(self : Knight.type) extends ForcedAction
 case class SelectTreasureAction(self : Cave.type, k : Knight.type, t : Treasure) extends BaseAction(self, "chooses treasure for", k)(Image(t.id, styles.card, styles.inline)) with ViewEquipment { def q = t.as[EquipmentTreasure].get.equipment }
 case class EvaluateTreasureAction(self : Knight.type, t : Treasure) extends ForcedAction
@@ -1393,7 +1411,7 @@ case class DragonFlameWallAction(self : Dragon.type, l : $[DragonCard], directio
 case class DragonDoneForfeitAction(f : Dragon.type) extends ForcedAction with Soft
 case class DragonEndAction(f : Dragon.type) extends ForcedAction
 case class DragonTreasuresAction(f : Dragon.type) extends ForcedAction
-case class DragonPickTreasureAction(self : Dragon.type, t : Chest.type) extends BaseAction(Image("treasure", styles.illustration))("Take", Chest)
+case class DragonPickTreasureAction(self : Dragon.type, t : Chest.type) extends BaseAction(Image("chest", styles.illustration))("Take", Chest)
 case class DragonPlaceGemsAction(f : Dragon.type) extends ForcedAction
 case class DragonPlaceGemAction(f : Dragon.type, p : Power) extends ForcedAction
 case class DragonRedrawAction(f : Dragon.type) extends ForcedAction
@@ -1412,7 +1430,7 @@ case class CaveDoneAction(f : Cave.type) extends ForcedAction
 case class PlaceTileAction(f : Cave.type, then : ForcedAction) extends ForcedAction
 case class RemoveTileAction(f : Cave.type, l : $[Relative], then : ForcedAction) extends ForcedAction
 case class PlaceTreasureAction(f : Cave.type, then : ForcedAction) extends ForcedAction
-case class PlaceTreasureTileAction(self : Cave.type, position : Relative, then : ForcedAction) extends BaseAction(Image("treasure", styles.illustration))("Place", Chest, "at", g => g.board.read(self, position).|("?").hl) with TileKey
+case class PlaceTreasureTileAction(self : Cave.type, position : Relative, then : ForcedAction) extends BaseAction(Image("chest", styles.illustration))("Place", Chest, "at", g => g.board.read(self, position).|("?").hl) with TileKey
 
 case class CaveCancelAction(self : Cave.type) extends ForcedAction
 
@@ -1477,6 +1495,10 @@ trait GameImplicits {
 
 class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame with ContinueGame with LoggedGame {
     private implicit val game = this
+
+    private def logMarker(scope : String, block : String, message : String) : Unit = {
+        +++("[VastGame][" + scope + "][" + block + "] " + message)
+    }
 
     var isOver = false
 
@@ -1544,27 +1566,40 @@ class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame wit
         super.log(convertForLog(s.$) : _*)
     }
 
+    // START_CONTRACT: loggedPerform
+    // PURPOSE: Execute a game action, validate resulting positions, and refresh highlight state for the next Continue.
+    // INPUTS: { action: Action - action to resolve, soft: Void - soft execution flag passed through to performInternal }
+    // OUTPUTS: { Continue - next continuation for the game loop }
+    // SIDE_EFFECTS: mutates game state, emits player-facing logs, emits stable verification markers
+    // LINKS: M-VAST-GAME, V-M-VAST-GAME
+    // END_CONTRACT: loggedPerform
     def loggedPerform(action : Action, soft : Void) : Continue = {
-        // println("> " + action)
-
+        // START_BLOCK_PERFORM_ACTION
+        logMarker("performAction", "BLOCK_PERFORM_ACTION", "action=" + action.getClass.getSimpleName + " turn=" + turn)
         val c = performInternal(action, soft)
+        // END_BLOCK_PERFORM_ACTION
 
+        // START_BLOCK_VALIDATE_POSITIONS
         factions.foreach { f =>
             if (states.contains(f)) {
                 f.positions.foreach { p =>
                     if (board.valid(p).not) {
+                        error("[VastGame][validateState][BLOCK_VALIDATE_POSITIONS] faction=" + f + " position=" + p)
                         println("out of map " + f + " " + p)
                         throw new Error("out of map " + f + " " + p)
                     }
                 }
             }
         }
+        // END_BLOCK_VALIDATE_POSITIONS
 
+        // START_BLOCK_SET_HIGHLIGHT
         highlightFaction = c match {
             case Ask(f, _) => $(f)
             case MultiAsk(a, _) => a./(_.faction)
             case _ => Nil
         }
+        // END_BLOCK_SET_HIGHLIGHT
 
         c
     }
@@ -4347,7 +4382,7 @@ class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame wit
 
                 board.writeAll(f, l)
 
-                Ask(f).each(l)(p => GiantBatsChestAction(f, TokenAt(Chest, p), c).as("Move", Chest, "at", board.read(f, p).|("?").hl)(Image("treasure", styles.illustration))).add(CaveCancelAction(f).as("Cancel"))
+                Ask(f).each(l)(p => GiantBatsChestAction(f, TokenAt(Chest, p), c).as("Move", Chest, "at", board.read(f, p).|("?").hl)(Image("chest", styles.illustration))).add(CaveCancelAction(f).as("Cancel"))
 
             case GiantBatsChestAction(f, t, c) =>
                 board.writeAll(f, $)
