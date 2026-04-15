@@ -1,0 +1,56 @@
+<TechnologyStack VERSION="0.2.0">
+  <Runtime>Browser DOM runtime with local static file serving</Runtime>
+  <Language>Scala 2.13.16</Language>
+  <Framework>Scala.js 1.19.0</Framework>
+
+  <Dependencies>
+    <dep name="org.scala-js::scalajs-dom" version="2.8.0-SNAPSHOT" purpose="DOM bindings for browser UI, document access, and runtime integration." />
+    <dep name="com.lihaoyi::fastparse" version="3.0.2" purpose="Parsing support used across the codebase." />
+    <dep name="com.lihaoyi::pprint" version="0.7.0" purpose="Readable debug rendering in logger output." />
+    <dep name="com.lihaoyi::fansi" version="0.4.0" purpose="Formatting/styling helpers used by the UI stack." />
+    <dep name="pt.kcry::blake3" version="3.1.2" purpose="Hashing support for cached or derived resources." />
+    <dep name="org.scala-lang.modules::scala-collection-contrib" version="0.3.0" purpose="Extra collection utilities." />
+    <dep name="org.scala-lang.modules::scala-parallel-collections" version="0.2.0" purpose="Host-side parallel simulation support via `host.xsbt`." />
+  </Dependencies>
+
+  <VersionConstraints>
+    <constraint lib="scala" min="2.13.16" max="2.13.x" reason="Project source and build are pinned to Scala 2.13." />
+    <constraint lib="sbt" min="1.11.2" max="1.11.x" reason="Project build uses the current SBT line declared in `project/build.properties`." />
+    <constraint lib="scalajs-dom" min="2.8.0-SNAPSHOT" max="2.8.x" reason="Browser UI code depends directly on the current DOM API surface." />
+  </VersionConstraints>
+
+  <Tooling>
+    <tool name="build" value="sbt" version="1.11.2" />
+    <tool name="scalajs-plugin" value="sbt-scalajs" version="1.19.0" />
+    <tool name="browser-server" value="serve-local.ps1" version="project-local" />
+    <tool name="host-build-profile" value="host.xsbt" version="project-local" />
+    <tool name="test-runner" value="No dedicated test framework detected yet" version="n/a" />
+  </Tooling>
+
+  <Testing>
+    <module-level>
+      <command>sbt compile</command>
+      <focus>Fast deterministic compilation checks for the shared code and the `vast` module.</focus>
+    </module-level>
+    <wave-level>
+      <command>sbt fastOptJS</command>
+      <focus>Verifies that the browser bundle still links after changes to game logic, UI, or serialization.</focus>
+    </wave-level>
+    <phase-level>
+      <command>powershell -File ./serve-local.ps1</command>
+      <focus>Manual browser smoke validation of startup, rendering, and critical gameplay scenarios from `index.html`.</focus>
+    </phase-level>
+    <mocking-policy>Prefer deterministic fixtures, replay logs, and host/browser scenario checks over broad mocks. Introduce fakes only around external boundaries.</mocking-policy>
+  </Testing>
+
+  <Observability>
+    <logger>Custom `hrf.logger` bridge to browser console log/warn/error with pprint-based formatting.</logger>
+    <log-format>[Module][function][BLOCK_NAME] message</log-format>
+    <required-fields>gameId, faction, actionLabel, turnIndex</required-fields>
+    <redaction>Do not emit secrets or raw credentials from URL params or online game fields; avoid leaking hidden-information payloads when adding new logs.</redaction>
+  </Observability>
+
+  <DeliveryShape>
+    <shape>Static browser app compiled with Scala.js, served from local or remote HTTP, with assets and `index.html` loaded directly by the browser.</shape>
+  </DeliveryShape>
+</TechnologyStack>

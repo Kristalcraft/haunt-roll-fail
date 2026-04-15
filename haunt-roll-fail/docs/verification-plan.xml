@@ -1,0 +1,323 @@
+<VerificationPlan VERSION="0.2.0">
+  <GlobalPolicy>
+    <log-format>[Module][function][BLOCK_NAME] message</log-format>
+    <deterministic-first>true</deterministic-first>
+    <module-level-focus>Prefer compile checks, replay round-trips, and narrow scenario validation near the changed Vast surface.</module-level-focus>
+    <wave-level-focus>Validate only the merged gameplay, UI, serialization, and bot surfaces touched by the current execution wave.</wave-level-focus>
+    <phase-level-focus>Run broader browser and host confidence checks before marking a large Vast phase complete.</phase-level-focus>
+    <redaction>Never log secrets from URL/server parameters and avoid leaking hidden-information state when adding new gameplay logs.</redaction>
+  </GlobalPolicy>
+
+  <CriticalFlows>
+    <VF-START-4P NAME="Start four-player Vast game" USE_CASES="UC-001" DATA_FLOW="DF-START-BROWSER" PRIORITY="high">
+      <scenario>The browser runtime starts a standard four-player game and reaches a playable initial board.</scenario>
+      <expected-outcome>Assets load, faction validation passes, and the initial state renders without runtime failure.</expected-outcome>
+      <required-signals>
+        <log-marker>[HRF][onDocumentLoad][BLOCK_ON_DOCUMENT_LOAD]</log-marker>
+        <trace-sequence>BLOCK_ON_DOCUMENT_LOAD -&gt; BLOCK_VALIDATE_FACTIONS -&gt; BLOCK_RENDER_SCENE</trace-sequence>
+      </required-signals>
+    </VF-START-4P>
+
+    <VF-RESOLVE-TURN NAME="Resolve legal action correctly" USE_CASES="UC-002" DATA_FLOW="DF-RESOLVE-TURN" PRIORITY="high">
+      <scenario>A human or bot performs a legal faction action and the next game state remains rules-correct.</scenario>
+      <expected-outcome>Only legal actions resolve, hidden information stays consistent, and victory progress remains valid.</expected-outcome>
+      <required-signals>
+        <log-marker>[VastGame][performAction][BLOCK_PERFORM_ACTION]</log-marker>
+        <trace-sequence>BLOCK_PERFORM_ACTION -&gt; next Continue emitted -&gt; BLOCK_RENDER_SCENE</trace-sequence>
+      </required-signals>
+    </VF-RESOLVE-TURN>
+
+    <VF-SERIALIZE-ROUNDTRIP NAME="Round-trip externalized actions" USE_CASES="UC-003" DATA_FLOW="DF-SERIALIZE-REPLAY" PRIORITY="high">
+      <scenario>An external action is written to string form, parsed back, and remains semantically equivalent.</scenario>
+      <expected-outcome>Replay/debugging evidence stays trustworthy and does not drift between write and parse steps.</expected-outcome>
+      <required-signals>
+        <log-marker>[VastSerialize][roundTrip][BLOCK_WRITE_PARSE_ROUNDTRIP]</log-marker>
+        <trace-sequence>write -&gt; parse -&gt; compare semantic equivalence</trace-sequence>
+      </required-signals>
+    </VF-SERIALIZE-ROUNDTRIP>
+
+    <VF-BOT-LEGALITY NAME="Bot selects only legal actions" USE_CASES="UC-004" DATA_FLOW="DF-BOT-DECISION" PRIORITY="high">
+      <scenario>A bot-controlled faction advances the game through the same legal action surface as a human player.</scenario>
+      <expected-outcome>Simulation progresses without illegal-action divergence or engine crashes.</expected-outcome>
+      <required-signals>
+        <log-marker>[VastBot][eval][BLOCK_EVAL_ACTIONS]</log-marker>
+        <trace-sequence>collect legal actions -&gt; evaluate -&gt; choose -&gt; apply through game engine</trace-sequence>
+      </required-signals>
+    </VF-BOT-LEGALITY>
+
+    <VF-THIEF-5P NAME="Enable five-player Thief support" USE_CASES="UC-006" DATA_FLOW="DF-ENABLE-THIEF" PRIORITY="high">
+      <scenario>A five-player setup including Thief starts successfully and Thief-specific actions behave according to `rules/thief.xml`.</scenario>
+      <expected-outcome>Five-player validation succeeds, Thief can act legally, and existing four-player flows still work.</expected-outcome>
+      <required-signals>
+        <log-marker>[VastThief][enable][BLOCK_ENABLE_THIEF_FIFTH_PLAYER]</log-marker>
+        <trace-sequence>read thief rules -&gt; expand setup validation -&gt; render fifth faction -&gt; serialize and simulate actions</trace-sequence>
+      </required-signals>
+    </VF-THIEF-5P>
+  </CriticalFlows>
+
+  <ModuleVerification>
+    <V-M-VAST-RULES MODULE="M-VAST-RULES" PRIORITY="high">
+      <test-files>
+        <file>rules/index.xml</file>
+        <file>rules/thief.xml</file>
+      </test-files>
+      <module-checks>
+        <check-1>Manual document review to map changed mechanics to the relevant XML rule sections before implementation.</check-1>
+      </module-checks>
+      <scenarios>
+        <scenario-1 kind="success">Every modified gameplay rule has an explicit XML reference in the current work packet or review notes.</scenario-1>
+      </scenarios>
+      <required-log-markers>
+        <marker-1>[VastRules][alignment][BLOCK_RULE_ALIGNMENT]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>Mechanic changes should not proceed without identifying the matching rules document.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>Update downstream verification entries when a new rules area becomes in scope.</wave-follow-up>
+      <phase-follow-up>Perform a targeted rules-versus-code review for all changed factions.</phase-follow-up>
+    </V-M-VAST-RULES>
+
+    <V-M-VAST-GAME MODULE="M-VAST-GAME" PRIORITY="high">
+      <test-files>
+        <file>vast/game.scala</file>
+      </test-files>
+      <module-checks>
+        <check-1>sbt compile</check-1>
+        <check-2>sbt fastOptJS</check-2>
+      </module-checks>
+      <scenarios>
+        <scenario-1 kind="success">Legal actions update the game state correctly for supported factions.</scenario-1>
+        <scenario-2 kind="failure">Invalid setup or illegal action assumptions are rejected before corrupting state.</scenario-2>
+      </scenarios>
+      <required-log-markers>
+        <marker-1>[VastGame][performAction][BLOCK_PERFORM_ACTION]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>State transitions must remain the sole authority for rules enforcement regardless of UI or bot caller.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>Run focused scenario checks for any faction or mechanic touched by the wave.</wave-follow-up>
+      <phase-follow-up>Complete a broader gameplay regression pass across supported factions.</phase-follow-up>
+    </V-M-VAST-GAME>
+
+    <V-M-VAST-SERIALIZE MODULE="M-VAST-SERIALIZE" PRIORITY="high">
+      <test-files>
+        <file>vast/serialize.scala</file>
+        <file>vast/host.scala</file>
+      </test-files>
+      <module-checks>
+        <check-1>Run host-side round-trip scenarios that write, parse, and compare external actions.</check-1>
+      </module-checks>
+      <scenarios>
+        <scenario-1 kind="success">Stable external actions round-trip without semantic drift.</scenario-1>
+        <scenario-2 kind="failure">Unexpected action shapes produce diagnosable failures rather than silent corruption.</scenario-2>
+      </scenarios>
+      <required-log-markers>
+        <marker-1>[VastSerialize][roundTrip][BLOCK_WRITE_PARSE_ROUNDTRIP]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>Serialization changes must be checked against replay/debug workflows, not only compile success.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>Re-run any scenario packs affected by changed action shapes.</wave-follow-up>
+      <phase-follow-up>Capture representative replay samples for the changed mechanics.</phase-follow-up>
+    </V-M-VAST-SERIALIZE>
+
+    <V-M-VAST-BOT MODULE="M-VAST-BOT" PRIORITY="high">
+      <test-files>
+        <file>vast/bot.scala</file>
+        <file>vast/bot-knight.scala</file>
+        <file>vast/bot-dragon.scala</file>
+      </test-files>
+      <module-checks>
+        <check-1>Run host-side simulations and confirm bots only choose legal actions.</check-1>
+      </module-checks>
+      <scenarios>
+        <scenario-1 kind="success">Current bots can advance supported factions through complete games without engine errors.</scenario-1>
+        <scenario-2 kind="failure">Bot scoring changes do not bypass legal action filtering.</scenario-2>
+      </scenarios>
+      <required-log-markers>
+        <marker-1>[VastBot][eval][BLOCK_EVAL_ACTIONS]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>Any future stronger AI must still consume a legal-action boundary rather than raw UI state.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>Check result distributions and obvious pathological choices after bot changes.</wave-follow-up>
+      <phase-follow-up>Establish stronger benchmarking once the AI integration path is defined.</phase-follow-up>
+    </V-M-VAST-BOT>
+
+    <V-M-VAST-META MODULE="M-VAST-META" PRIORITY="high">
+      <test-files>
+        <file>vast/meta.scala</file>
+      </test-files>
+      <module-checks>
+        <check-1>sbt compile</check-1>
+        <check-2>Browser startup smoke after changing faction validation or asset registration.</check-2>
+      </module-checks>
+      <scenarios>
+        <scenario-1 kind="success">Supported faction combinations validate and create the correct game/UI entry points.</scenario-1>
+        <scenario-2 kind="failure">Unsupported combinations fail explicitly instead of entering broken runtime states.</scenario-2>
+      </scenarios>
+      <required-log-markers>
+        <marker-1>[VastMeta][validateFactions][BLOCK_VALIDATE_FACTIONS]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>Changing player-count constraints must be accompanied by downstream UI and game-engine verification.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>Re-run all affected startup permutations after validation logic changes.</wave-follow-up>
+      <phase-follow-up>Review supported faction matrix before marking a setup-related phase complete.</phase-follow-up>
+    </V-M-VAST-META>
+
+    <V-M-VAST-UI MODULE="M-VAST-UI" PRIORITY="high">
+      <test-files>
+        <file>vast/ui.scala</file>
+        <file>index.html</file>
+      </test-files>
+      <module-checks>
+        <check-1>sbt fastOptJS</check-1>
+        <check-2>powershell -File ./serve-local.ps1</check-2>
+      </module-checks>
+      <scenarios>
+        <scenario-1 kind="success">The map, factions, overlays, and click targets render correctly for supported states.</scenario-1>
+        <scenario-2 kind="failure">Hidden information is not leaked by rendering or hover behavior.</scenario-2>
+      </scenarios>
+      <required-log-markers>
+        <marker-1>[VastUI][renderScene][BLOCK_RENDER_SCENE]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>UI-only changes must still be validated against actual legal-action and hidden-information rules.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>Manually validate the exact interaction surface touched by the wave.</wave-follow-up>
+      <phase-follow-up>Complete a browser regression pass for startup, navigation, and end-to-end gameplay checkpoints.</phase-follow-up>
+    </V-M-VAST-UI>
+
+    <V-M-VAST-HOST MODULE="M-VAST-HOST" PRIORITY="medium">
+      <test-files>
+        <file>vast/host.scala</file>
+        <file>host.scala</file>
+        <file>host.xsbt</file>
+      </test-files>
+      <module-checks>
+        <check-1>Run host-side simulation batches after bot or serialization changes.</check-1>
+      </module-checks>
+      <scenarios>
+        <scenario-1 kind="success">Simulation batches complete and emit usable result summaries.</scenario-1>
+        <scenario-2 kind="failure">Divergent games emit actionable failure artifacts rather than silent stops.</scenario-2>
+      </scenarios>
+      <required-log-markers>
+        <marker-1>[VastHost][simulate][BLOCK_SIMULATE_GAME]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>Host validation should remain capable of exercising the same action/serialization path as live gameplay.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>Re-run simulations whenever legal-action generation or parsing changes.</wave-follow-up>
+      <phase-follow-up>Use host evidence as one input into AI-readiness reviews.</phase-follow-up>
+    </V-M-VAST-HOST>
+
+    <V-M-HRF-WEB-RUNTIME MODULE="M-HRF-WEB-RUNTIME" PRIORITY="high">
+      <test-files>
+        <file>hrf.scala</file>
+        <file>serve-local.ps1</file>
+        <file>index.html</file>
+      </test-files>
+      <module-checks>
+        <check-1>sbt fastOptJS</check-1>
+        <check-2>powershell -File ./serve-local.ps1</check-2>
+      </module-checks>
+      <scenarios>
+        <scenario-1 kind="success">The browser app loads resources and hands control to the Vast UI successfully.</scenario-1>
+        <scenario-2 kind="failure">Resource or route issues fail clearly instead of partially loading a broken runtime.</scenario-2>
+      </scenarios>
+      <required-log-markers>
+        <marker-1>[HRF][onDocumentLoad][BLOCK_ON_DOCUMENT_LOAD]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>Runtime bootstrap checks must be rerun whenever browser-launch files are edited for Vast work.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>Smoke the browser path after changing any launch-critical file.</wave-follow-up>
+      <phase-follow-up>Use startup verification as a gate for any phase that touches browser execution.</phase-follow-up>
+    </V-M-HRF-WEB-RUNTIME>
+
+    <V-M-VAST-THIEF-SUPPORT MODULE="M-VAST-THIEF-SUPPORT" PRIORITY="high">
+      <test-files>
+        <file>rules/thief.xml</file>
+        <file>vast/game.scala</file>
+        <file>vast/meta.scala</file>
+        <file>vast/ui.scala</file>
+        <file>vast/serialize.scala</file>
+        <file>vast/bot.scala</file>
+        <file>vast/host.scala</file>
+      </test-files>
+      <module-checks>
+        <check-1>sbt compile</check-1>
+        <check-2>sbt fastOptJS</check-2>
+        <check-3>Run a five-player startup and focused Thief scenario pass.</check-3>
+        <check-4>Run host-side replay/simulation checks that include Thief actions.</check-4>
+      </module-checks>
+      <scenarios>
+        <scenario-1 kind="success">A five-player setup including Thief starts successfully and exposes only legal Thief actions.</scenario-1>
+        <scenario-2 kind="success">Thief interactions serialize, replay, and render correctly.</scenario-2>
+        <scenario-3 kind="failure">Existing four-player setups continue to work unchanged after Thief support lands.</scenario-3>
+      </scenarios>
+      <required-log-markers>
+        <marker-1>[VastThief][enable][BLOCK_ENABLE_THIEF_FIFTH_PLAYER]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>Five-player enablement must prove both new Thief behavior and non-regression of current four-player flows.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>Re-run setup, UI, serialization, and simulation checks for all touched surfaces after each Thief wave.</wave-follow-up>
+      <phase-follow-up>Do not mark Thief support complete until both five-player and four-player evidence are green.</phase-follow-up>
+    </V-M-VAST-THIEF-SUPPORT>
+  </ModuleVerification>
+
+  <PhaseGates>
+    <Gate-Phase-1 PHASE="Phase-1">
+      <goal>The current Vast architecture is documented with clear references from rules to core engine surfaces.</goal>
+      <commands>
+        <command-1>Review `docs/knowledge-graph.xml`, `docs/development-plan.xml`, and `docs/verification-plan.xml` together.</command-1>
+      </commands>
+      <required-evidence>
+        <evidence-1>Core modules and rule references are anchored and navigable.</evidence-1>
+      </required-evidence>
+    </Gate-Phase-1>
+
+    <Gate-Phase-2 PHASE="Phase-2">
+      <goal>Browser startup and gameplay interaction surfaces are stable enough for iterative work.</goal>
+      <commands>
+        <command-1>sbt fastOptJS</command-1>
+        <command-2>powershell -File ./serve-local.ps1</command-2>
+      </commands>
+      <required-evidence>
+        <evidence-1>Startup and one or more critical gameplay scenarios work in the browser.</evidence-1>
+      </required-evidence>
+    </Gate-Phase-2>
+
+    <Gate-Phase-3 PHASE="Phase-3">
+      <goal>Bot and host validation loops are trustworthy enough to support future AI work.</goal>
+      <commands>
+        <command-1>Run host-side simulation batches for supported factions.</command-1>
+      </commands>
+      <required-evidence>
+        <evidence-1>Bots choose only legal actions and simulations produce useful evidence.</evidence-1>
+      </required-evidence>
+    </Gate-Phase-3>
+
+    <Gate-Phase-4 PHASE="Phase-4">
+      <goal>Thief is enabled as the fifth player with verified non-regression of the current game.</goal>
+      <commands>
+        <command-1>sbt compile</command-1>
+        <command-2>sbt fastOptJS</command-2>
+        <command-3>Run a five-player Thief startup and gameplay validation pass.</command-3>
+      </commands>
+      <required-evidence>
+        <evidence-1>Five-player Thief startup succeeds.</evidence-1>
+        <evidence-2>Thief-specific mechanics match `rules/thief.xml` for the implemented scenarios.</evidence-2>
+        <evidence-3>Four-player regression checks remain green.</evidence-3>
+      </required-evidence>
+    </Gate-Phase-4>
+  </PhaseGates>
+
+  <FailurePackets>
+    <packet-template>
+      <expected-fields>scenario, expected-evidence, observed-evidence, first-divergent-block, next-action</expected-fields>
+    </packet-template>
+  </FailurePackets>
+</VerificationPlan>

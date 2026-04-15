@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vast-rules part="goblins" game="Vast: The Crystal Caverns" lang="en">
+  <role id="goblins">
+    <victory>
+      <primary>Kill Knight (Health 0).</primary>
+      <alt order="2">If no Knight: kill Dragon.</alt>
+      <alt order="3">If no Knight or Dragon: smash 5 Crystal tokens.</alt>
+    </victory>
+
+    <setup>
+      <pieces>3 Goblin Tribe pieces on player board</pieces>
+      <discs>Goblin and Strength discs near board; 1 Strength disc on Fangs</discs>
+      <decks>Shuffle War, Monster, Secrets</decks>
+      <rage>1</rage>
+    </setup>
+
+    <turn-summary>
+      <phase>Choose War Card (+1 Rage if at 0)</phase>
+      <phase>Populate Tribes (overpopulation?)</phase>
+      <phase>Assign Monsters (max = Bones Population)</phase>
+      <phase>Draw Secrets (hand limit 5)</phase>
+      <phase>Activate Tribes (move, then action)</phase>
+      <note>End after Activate Tribes. Shuffle entire War deck including chosen card when turn ends.</note>
+    </turn-summary>
+
+    <tribes>
+      <tribe id="fangs">Strength disc +1 Strength. Special: Increase Rage by 1.</tribe>
+      <tribe id="bones">Extra Monster slot (2 Monsters). Special: Draw and assign 1 Monster.</tribe>
+      <tribe id="eye">More powerful Secrets. Special: Draw 1 Secrets card.</tribe>
+    </tribes>
+
+    <statistics>
+      <rule>Population = Goblin discs under Tribe piece.</rule>
+      <rule>Strength = Population + Strength discs (Fangs has permanent +1).</rule>
+      <rule>Perception = Population + 1.</rule>
+      <rule>Max 4 Population per Tribe; overpopulation rules apply.</rule>
+    </statistics>
+
+    <rage-and-malaise>
+      <increase>When Tribe attacked/shot (Knight, Dragon); Dragon Hiss; Cave Soporific Spores; Thief Pickpocket/Backstab; Plunder; Fangs special; killing Thief.</increase>
+      <decrease>When Tribe successfully attacks another player; smash Crystal; spend to prevent overpopulation.</decrease>
+      <malaise>Rage 0: −1 Strength all Tribes until Rage ≥ 1.</malaise>
+      <bounds>Rage 0–3.</bounds>
+    </rage-and-malaise>
+
+    <phase id="war-card">
+      <rule>If Rage 0, increase to 1. Draw War cards equal to Rage. Choose one; discard others.</rule>
+    </phase>
+
+    <phase id="populate">
+      <rule>Add discs per War card. May skip adding discs to any Tribe by spending 1 Rage per Tribe affected.</rule>
+      <overpopulation>If Population would exceed 4: scatter one revealed Tribe; if none revealed, scatter hidden. Scattered Tribe need not be one that caused overpopulation.</overpopulation>
+    </phase>
+
+    <phase id="monsters">
+      <rule>Draw Monster cards per War card; assign to Tribes (Fangs 1, Eye 1, Bones 2). May replace existing. Discard unassigned.</rule>
+      <rule>Max Monsters assigned ≤ Bones Population. If Bones Population drops below assigned count, Monsters stay but new ones cannot be assigned until Population catches up.</rule>
+      <rule>Deck empty: shuffle discards.</rule>
+    </phase>
+
+    <phase id="secrets">
+      <rule>Draw per War card. Hand limit 5 (face-up count).</rule>
+      <rule>Play Secrets any time on your turn; discard unless stated.</rule>
+    </phase>
+
+    <phase id="activate-tribes">
+      <rule>Each Tribe once per turn; any order; finish one before next.</rule>
+      <movement>Any number of tiles; Lit and Dark; not through walls. −1 Population per 2 Lit tiles exited same turn (remove disc on second).</movement>
+      <actions>After movement: one action — Attack, Plunder, Explore, Special, Reveal, Hide. Tribe on board cannot move. 0 Population: no actions. Revealed Tribes only for most actions except Reveal/Hide as stated.</actions>
+    </phase>
+
+    <action id="attack">
+      <targets>Knight, Thief, Dragon (Ash Dragon Variant only), smash Crystal with two Tribes</targets>
+      <knight>Strength &gt; Knight Strength to enter. Attack: Knight −1 Health, Tribe scatters, Rage −1. Knight 0: you win.</knight>
+      <thief>Always enter. Perception &gt; Thief Stealth to attack; Thief killed; Rage −1; Tribe does not scatter; draw Secrets or gain Rage per Loot Drop.</thief>
+      <dragon>Strength &gt; Dragon Armor to enter; attack resolves per Goblins rules with Ash Dragon if applicable.</dragon>
+      <crystal>Two Tribes each Strength ≥ 3; each uses Attack on Crystal before turn ends. Smash: give Crystal to Knight (or keep on board if no Knight); both Tribes scatter; Rage −1.</crystal>
+    </action>
+
+    <action id="plunder">
+      <treasure>Rage +1; return token to Cave supply.</treasure>
+      <dragon-gem>Roll die; center: Tribe scatters. Else: Rage +1. Return Gem to Dragon. May plunder from Dragon if no Gems on map and Strength &gt; Armor.</dragon-gem>
+    </action>
+
+    <action id="explore">
+      <rule>On Dark tile: choose adjacent open space; Cave places Cave tile Dark up (or you draw); place Tribe on that tile.</rule>
+    </action>
+
+    <action id="reveal">
+      <rule>Move hidden Tribe from board to Dark tile with Tribe symbol; or open space adjacent to any tile (lurking).</rule>
+      <lurking>Still hidden. Later: move to adjacent tile only OR Hide; no action after lurk move. Tile placed under lurking Tribe → revealed.</lurking>
+    </action>
+
+    <action id="hide">
+      <rule>Return Tribe piece to player board. Hidden Tribes not targeted except Ambush tile/Event when Knight reveals.</rule>
+    </action>
+
+    <special-actions>
+      <fangs>Increase Rage by 1</fangs>
+      <bones>Draw and assign 1 Monster</bones>
+      <eye>Draw 1 Secrets</eye>
+      <note>Hidden Tribe cannot use special action.</note>
+    </special-actions>
+
+    <scatter>
+      <when>Attack, attacked (unless stated), or 0 Population</when>
+      <effect>Tribe to board; Population −2; discard Monster (if Bones had 2 Monsters, discard one of choice)</effect>
+    </scatter>
+
+    <dragon-gems-on-map>
+      <rule>Each Gem on map provides its symbol for your powers (Dragon chapter).</rule>
+    </dragon-gems-on-map>
+  </role>
+</vast-rules>

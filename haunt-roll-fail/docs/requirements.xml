@@ -1,0 +1,104 @@
+<RequirementsAnalysis VERSION="0.2.0">
+  <Project>
+    <name>hrf/vast</name>
+    <annotation>Browser-playable digital adaptation of Vast: The Crystal Caverns focused on exact game mechanics, replayable state transitions, and future strong AI bot play.</annotation>
+    <keywords>vast, boardgame, digital adaptation, scalajs, browser game, rules engine, ai bot</keywords>
+  </Project>
+
+  <Actors>
+    <actor-HumanPlayer>Human player interacting through the browser UI.</actor-HumanPlayer>
+    <actor-BotPlayer>Current heuristic bot and future agent-driven AI player.</actor-BotPlayer>
+    <actor-Developer>Project maintainer validating rules, browser behavior, and AI integration.</actor-Developer>
+    <actor-RulesCorpus>XML rule documents in the `rules/` directory used as a semantic rules reference.</actor-RulesCorpus>
+  </Actors>
+
+  <UseCases>
+    <UC-001>
+      <Actor>HumanPlayer</Actor>
+      <Action>Starts a four-faction Vast game in the browser.</Action>
+      <Goal>Reach a playable initial state with valid faction setup and assets loaded.</Goal>
+      <Preconditions>Scala.js bundle is built, browser page is served locally or remotely, and the selected faction combination is valid.</Preconditions>
+      <AcceptanceCriteria>Game setup completes without runtime errors, the board renders, and only valid four-faction combinations are accepted.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedFlows>DF-START-BROWSER</RelatedFlows>
+    </UC-001>
+
+    <UC-002>
+      <Actor>HumanPlayer</Actor>
+      <Action>Performs faction actions during play.</Action>
+      <Goal>Have every legal move resolve exactly according to the game rules.</Goal>
+      <Preconditions>Game state is initialized and the acting faction has available actions.</Preconditions>
+      <AcceptanceCriteria>Only legal actions are presented, state transitions remain valid, hidden information is preserved correctly, and victory conditions resolve correctly.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedFlows>DF-RESOLVE-TURN</RelatedFlows>
+    </UC-002>
+
+    <UC-003>
+      <Actor>Developer</Actor>
+      <Action>Serializes and replays actions.</Action>
+      <Goal>Preserve deterministic, inspectable action/state history for debugging and validation.</Goal>
+      <Preconditions>Game actions can be written and parsed by the serialization layer.</Preconditions>
+      <AcceptanceCriteria>Write/parse round-trips stay stable for external actions and replay does not diverge from the intended state transition.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedFlows>DF-SERIALIZE-REPLAY</RelatedFlows>
+    </UC-003>
+
+    <UC-004>
+      <Actor>BotPlayer</Actor>
+      <Action>Selects moves for a faction.</Action>
+      <Goal>Play legal actions automatically and provide a base surface for stronger AI integration.</Goal>
+      <Preconditions>Faction-specific or generic bot evaluation is available for the acting faction.</Preconditions>
+      <AcceptanceCriteria>Bots only choose legal actions, can finish games without crashing the engine, and expose a clean decision boundary for future AI agents.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedFlows>DF-BOT-DECISION</RelatedFlows>
+    </UC-004>
+
+    <UC-005>
+      <Actor>Developer</Actor>
+      <Action>Compares implementation behavior against the XML rules corpus.</Action>
+      <Goal>Prevent drift between coded mechanics and the semanticized rule documents.</Goal>
+      <Preconditions>Relevant rules exist in `rules/*.xml` for the mechanic under review.</Preconditions>
+      <AcceptanceCriteria>Critical mechanics and asymmetrical faction rules can be traced from implementation to rule references and verified before major changes merge.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedFlows>DF-RULES-ALIGNMENT</RelatedFlows>
+    </UC-005>
+
+    <UC-006>
+      <Actor>HumanPlayer</Actor>
+      <Action>Starts or joins a five-player game that includes Thief.</Action>
+      <Goal>Play Vast with the full intended role set once Thief is implemented.</Goal>
+      <Preconditions>Thief rules, setup, UI, legal actions, serialization, and bot/runtime handling are implemented and verified.</Preconditions>
+      <AcceptanceCriteria>Five-player setup validates correctly, Thief-specific mechanics follow the rule corpus, and existing four-player behavior does not regress.</AcceptanceCriteria>
+      <Priority>high</Priority>
+      <RelatedFlows>DF-ENABLE-THIEF</RelatedFlows>
+    </UC-006>
+  </UseCases>
+
+  <NonGoals>
+    <item-1>Do not treat unsupported factions or variants as production-ready without explicit implementation and verification.</item-1>
+    <item-2>Do not optimize for server-backed multiplayer architecture inside this GRACE initialization scope.</item-2>
+    <item-3>Do not assume current heuristic bots are already strategically strong enough for the future AI target.</item-3>
+  </NonGoals>
+
+  <Constraints>
+    <constraint-1>The target runtime is browser-first via Scala.js and DOM-based UI rendering.</constraint-1>
+    <constraint-2>The current code validates exactly four factions and currently rejects Thief, but project planning must preserve a future path to full five-player support.</constraint-2>
+    <constraint-3>Rules accuracy is more important than feature breadth for future execution waves.</constraint-3>
+    <constraint-4>Files needed for browser launch and asset loading are in scope together with the `vast` module.</constraint-4>
+  </Constraints>
+
+  <Risks>
+    <risk-1>Asymmetrical faction rules can drift from the XML rule corpus if logic changes are not cross-checked.</risk-1>
+    <risk-2>Browser UI, hidden information, and action availability can diverge from the core game state if not verified together.</risk-2>
+    <risk-3>Serialization mismatches can make replay/debugging evidence unreliable.</risk-3>
+    <risk-4>Future AI integration may be blocked if the decision interface remains entangled with UI-only concerns.</risk-4>
+    <risk-5>Adding Thief later may accidentally hard-code four-player assumptions in setup, turn order, UI layout, or bot/simulation paths if those assumptions are not surfaced early.</risk-5>
+  </Risks>
+
+  <OpenQuestions>
+    <question-1>What should be the canonical interface for a future agent-grade AI bot: direct `Game` access, action lists only, or a separate host/simulation boundary?</question-1>
+    <question-2>Which mechanics from the `rules/` corpus should receive the first deterministic regression checks?</question-2>
+    <question-3>Should the verification strategy introduce a dedicated automated test runner, or continue relying first on compile/build and host/browser scenario checks?</question-3>
+    <question-4>Should Thief be implemented first at the rules-engine level with temporary UI gaps, or only land once setup, UI, serialization, and host simulation all move together?</question-4>
+  </OpenQuestions>
+</RequirementsAnalysis>

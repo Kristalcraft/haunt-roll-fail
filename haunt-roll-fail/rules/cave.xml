@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vast-rules part="cave" game="Vast: The Crystal Caverns" lang="en">
+  <role id="cave">
+    <victory>
+      <primary>Place all Cave tiles, then destroy tiles until 5 Crystal tiles have collapsed (removed).</primary>
+    </victory>
+
+    <setup>
+      <no-knight>If no Knight: leave Treasure cards, Event cards, Event tokens in box.</no-knight>
+      <omens>Put Omen tokens in draw bag</omens>
+      <treasure-tokens>10 on board; 12 if Thief present</treasure-tokens>
+      <tokens>Crystal, Event, Rockslide near board</tokens>
+      <decks>Shuffle Treasure and Event</decks>
+      <hand>Draw 3 Cave tiles from stack</hand>
+    </setup>
+
+    <turn-summary>
+      <phase>Collect Omen Tokens</phase>
+      <phase>Shape the Cave</phase>
+      <phase>Place Treasure</phase>
+    </turn-summary>
+
+    <cave-tiles-rules>
+      <rule>Whenever you place Cave tile, draw one to replace hand.</rule>
+      <rule>On your turn, place Crystal tiles from hand before other tiles. On other players’ turns, Crystal first not required.</rule>
+      <rule>Open edge on Lit tile (including after reveal): must place Dark Cave tile from hand on each open edge (no Cave player: from stack).</rule>
+      <rule>Multiple reveals: fill open edges in any order.</rule>
+      <rule>May examine Dark tiles on map anytime; do not reveal to others.</rule>
+    </cave-tiles-rules>
+
+    <phase id="collect-omens">
+      <table>Count Treasure tokens + Crystal tokens on map → Omen tokens: 0→1, 1→2, 2–3→3, 4–6→4, 7–10→5, 11+→6</table>
+      <using-omens>Discard Omen tokens to bag equal to cost. Any combination of symbols shown. Any number of times per turn. Unused save.</using-omens>
+      <hatred-past-plunder>Three costs left→right: first, second, third use same turn; further uses cost highest.</hatred-past-plunder>
+    </phase>
+
+    <phase id="shape-cave">
+      <growth>Choose tile from hand; place Dark adjacent to any tile. Crystal tiles first if in hand. Last hand tile placed → Collapse begins next turn.</growth>
+      <collapse>Remove 3 tiles per turn instead of placing. Track Crystal tiles removed. Order: touch one tile first, then two; Crystal tile must be removed if possible; Dark removed reveal for Crystal; Entrance never removed; tokens return; 5 Crystal tiles removed → Cave wins.</collapse>
+      <no-cave-player>Each player removes 3 tiles at end of their turn during Collapse.</no-cave-player>
+    </phase>
+
+    <phase id="place-treasure">
+      <rule>Place Treasure token on Dark tile without player piece or Treasure. If none, skip.</rule>
+    </phase>
+
+    <omens>
+      <omen name="Giant Bats">Cost 1 Omen. Move Knight, Gem, Treasure, Goblin, or Thief up to 3 spaces (per rules).</omen>
+      <omen name="Past Plunder">Cost 1/2/3 Omen.</omen>
+      <omen name="Rockslide">Cost 2 Omen. Wall between two adjacent tiles without walls; or move if all 3 placed.</omen>
+      <omen name="Soporific Spores">Cost 3 Omen. Target: Knight −5 Grit; Goblins Tribe to 1 Pop; Dragon Sloth Wakefulness→Sloth; Thief loses upgrade.</omen>
+      <omen name="Hatred">Cost 1/2/3 Omen.</omen>
+      <omen name="Crystal Curse">Cost 1 Omen. Place tile / during Collapse remove tile / rotate / Event token / move top 3 Event to bottom.</omen>
+    </omens>
+
+    <treasures-to-knight>
+      <rule>Knight claims Treasure: draw 2 Treasure cards; Knight picks one; other to bottom.</rule>
+      <rule>Goblin claims: Rage +1.</rule>
+      <rule>Dragon ends on Treasure: may claim for Greed.</rule>
+      <rule>Tokens return to you immediately when claimed by Knight/Goblins/Dragon.</rule>
+      <thief>Counts for Omens until stashed; stashed no longer counts for Omens or map placement.</thief>
+    </treasures-to-knight>
+
+    <events>
+      <rule>Knight reveals Event or enters Event token: draw 3 Event cards; choose one; others bottom. Knight resolves.</rule>
+      <rule>Played Events removed; deck empty: no more Event tiles/tokens for remainder.</rule>
+      <rule>May examine top 3 Event cards anytime.</rule>
+    </events>
+
+    <collapse-other-causes>
+      <rule>Wrath and Cave-In: before Collapse — Crystal tiles count toward victory, other tiles to bottom of stack, reconnect, fill edges. During Collapse — removed from game, Crystals count.</rule>
+    </collapse-other-causes>
+  </role>
+</vast-rules>

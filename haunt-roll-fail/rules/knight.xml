@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vast-rules part="knight" game="Vast: The Crystal Caverns" lang="en">
+  <role id="knight">
+    <victory>
+      <primary>Kill the Dragon by reducing Health to 0.</primary>
+      <no-dragon>If no Dragon: smash 5 Crystal tokens, then escape the Cave by entering the Entrance tile.</no-dragon>
+    </victory>
+
+    <setup>
+      <health>7</health>
+      <grit>0</grit>
+      <piece>Entrance tile</piece>
+      <bomb-tokens>3 near board</bomb-tokens>
+      <sidequests>Shuffle deck; draw 3 to hand</sidequests>
+      <hero-cubes>2 near board (on “0” Grit); remaining on Grit track spaces 5, 11, 18, 26, 35</hero-cubes>
+    </setup>
+
+    <turn-summary>
+      <phase id="1">Pick Up Hero Cubes</phase>
+      <phase id="2">Move and Act</phase>
+      <note>Turn ends when phases complete. May end without completing both. Before ending, may assign unused Hero cubes to stats or equipment/Treasure not requiring Encounters.</note>
+    </turn-summary>
+
+    <statistics>
+      <stat name="Movement">Distance in tiles you can move per turn.</stat>
+      <stat name="Perception">Encounters per turn; affects Thief interaction.</stat>
+      <stat name="Strength">Certain attacks; defense outside your turn.</stat>
+      <rule>Each turn statistics start at 1 (leftmost track space).</rule>
+    </statistics>
+
+    <phase id="pick-up-hero-cubes">
+      <title>Pick Up Hero Cubes</title>
+      <rule>Pick up all Hero cubes on board except those on Grit track and discarded. First turn: pick up the two cubes set near board.</rule>
+      <hero-cubes>
+        <rule>Any time on turn, allocate Hero cubes to increase Movement/Perception/Strength, equipment (Bomb, Bow, Ancient Map, Shield), Treasure cards.</rule>
+        <rule>Allocating to statistic track: increases to number shown; place left to right from leftmost empty (second space onward).</rule>
+        <rule>Allocating to equipment/Treasure: enables effect. Cube stays until next Pick Up phase. If discard Hero cube → Discarded space. Recover via Cave Bread Event.</rule>
+        <rule>Starting two Hero cubes can never be lost or discarded.</rule>
+      </hero-cubes>
+    </phase>
+
+    <phase id="move-and-act">
+      <title>Move and Act</title>
+      <rule>Move adjacent tiles up to Movement; spend Encounters up to Perception. Move and spend in any order; can only move while Encounters remain.</rule>
+      <rule>Normally cannot move through walls; Ancient Map: each use moves through one wall.</rule>
+      <rule>By spending one Encounter, actions in order: (1) Reveal and Resolve Dark Tile — required if applicable; (2) Resolve Attacks — Crystals, Dragon, Goblins, Thief, any order; (3) Collect Treasures — Dragon Gems, Treasure tokens.</rule>
+      <rule>One Encounter can cover any or all of these on a Lit tile (e.g. one Encounter to attack Dragon and pick up two Treasures).</rule>
+      <rule>Attacks/collections must be on your tile.</rule>
+      <rule>Move onto Dark tile: must spend Encounter to reveal and resolve, then may do other actions.</rule>
+    </phase>
+
+    <revealing-tiles>
+      <rule>Enter Dark tile: reveal (flip Lit), place, resolve. After resolve: gain 1 Grit.</rule>
+      <rule>Place revealed tile connecting to tile moved from; if entered through open side, place open side of revealed tile against source. Cave adds Dark tiles on open sides (or you draw if no Cave).</rule>
+      <tile-type name="Event">Cave plays Event card on you (or you draw if no Cave). Enter or start turn on tile with Event token: resolve as Event tile, remove token.</tile-type>
+      <tile-type name="Ambush">May assign more Hero cubes to Strength immediately. Goblins may attack with hidden Tribe if Tribe Strength &gt; your Strength. If attack: lose 1 Health, Tribe scatters, Goblins Rage −1.</tile-type>
+      <tile-type name="Treasure Room">Place Treasure token; may pick up as part of Encounter or ignore.</tile-type>
+      <tile-type name="Crystal">Place Crystal token; may smash as part of Encounter or ignore.</tile-type>
+      <tile-type name="Vault">Place Vault token (Thief games only).</tile-type>
+    </revealing-tiles>
+
+    <dragon>
+      <rule>Underground: enter Dragon tile without Encounter if not attacking. Attacking costs Encounter.</rule>
+      <rule>Surface: to enter, Strength ≥ Dragon Armor, then must attack (as Encounter).</rule>
+      <attacking>
+        <rule>Underground, before Collapse: only with Bomb equipment; once per turn.</rule>
+        <rule>After Collapse begins: can attack without Bomb; still once per turn while underground.</rule>
+        <rule>Surface: no Bomb required; multiple attacks per turn, each separate Encounter, without moving.</rule>
+        <resolution>
+          <if test="Strength &gt; Armor">Attack succeeds; Dragon loses 1 Health.</if>
+          <if test="Strength == Armor">Roll Dragon die; succeeds only if die affects center tile.</if>
+        </resolution>
+        <rule>Dragon Health 0: Dragon dies; Knight wins.</rule>
+      </attacking>
+    </dragon>
+
+    <goblins>
+      <rule>Enter tile with revealed Tribe only if Strength &gt; Tribe Strength; then must attack (Encounter); Tribe scatters. Multiple Tribes: attack all in same Encounter.</rule>
+    </goblins>
+
+    <thief>
+      <rule>Enter Thief tile without Encounter if not attacking.</rule>
+      <rule>To attack Thief: Perception &gt; Thief Stealth. Success: Thief killed; gain Grit equal to his Loot Drop Level.</rule>
+    </thief>
+
+    <smashing-crystals>
+      <rule>If Strength ≥ 3, may smash Crystal on your tile. Place on Smashed Crystals; gain 2 Grit.</rule>
+      <no-dragon>Win: smash 5 Crystals then escape Cave (Entrance).</no-dragon>
+    </smashing-crystals>
+
+    <treasures name="Treasure effects (on collect)">
+      <item name="Elven Sword">+1 Perception; +1 Strength during your turn.</item>
+      <item name="Enchanted Bow">Shoot Dragon or Thief up to 5 tiles straight line, even Dragon underground or Dark between. Before/during/after movement. No Encounter. Thief killed; Dragon discards Power cards = Strength − 1.</item>
+      <item name="Javelin">Next attack may target underground Dragon; +1 Strength on next attack. Cannot use Javelin same turn as Bomb underground attack. No Hero cube; costs Encounter to attack. Remove from game after use.</item>
+      <item name="Heroic Boots">+4 Movement.</item>
+      <item name="Mighty Axe">+1 Strength during turn. If attack Dragon succeeds and cube on Axe, may discard cube for extra −1 Health (2 total). Cannot use with Bomb underground.</item>
+      <item name="Pixie Lantern">+1 Movement and +1 Perception.</item>
+      <item name="Potion Kit">Remove from game + discard activating Hero cube → regain 2 Health.</item>
+    </treasures>
+
+    <equipment>
+      <item name="Ancient Map">Move through walls; two touching tile edges with walls = one wall. Each cube = one wall. Does not change Movement costs.</item>
+      <item name="Bomb">Attack Dragon (Encounter) underground before Collapse; OR place Bomb token to permanently remove wall. Bomb not needed to attack surfaced Dragon or after Collapse. Attacking with Bomb does not consume token. Rotate/Rockslide on Bomb edge removes Bomb from game.</item>
+      <item name="Bow">Shoot visible Goblin Tribe at unlimited range; Population − (Strength − 1); does not scatter Tribe. Before/during/after movement; no Encounter.</item>
+      <item name="Shield">Ignore effects that would move you. Each Grit loss reduced to 1 if Shield activated before effects revealed.</item>
+    </equipment>
+
+    <dragon-gem-collect>
+      <rule>Roll Dragon die. If affects center: −2 Grit (trap). Else: +5 Grit. Return Gem to Dragon.</rule>
+    </dragon-gem-collect>
+
+    <treasure-token-collect>
+      <rule>Cave draws 2 Treasure cards, gives one; other to bottom (or draw top if no Cave).</rule>
+      <rule>May keep facedown or decline for 5 Grit (remove card).</rule>
+      <rule>Empty Treasure deck: gain 5 Grit each time.</rule>
+    </treasure-token-collect>
+
+    <sidequests>
+      <rule>Reveal from hand if requirements met; remove from game; gain Grit (upper-right); draw replacement.</rule>
+      <rule>“Attack” for Sidequest: attack you prompt on your turn; not Bow or Ambush tile reveal.</rule>
+    </sidequests>
+
+    <grit>
+      <intro>Track on Grit track. Reach space with Hero cube → take cube (usable same turn). Fall below white space → return cube to that space; if must return placed cube, turn ends immediately. Never below 0 Grit.</intro>
+      <gain>
+        <row source="Reveal Cave Tile">1</row>
+        <row source="Smash Crystal">2</row>
+        <row source="Decline Treasure">5</row>
+        <row source="Kill Thief">0–3</row>
+        <row source="Complete Sidequest">3–6</row>
+        <row source="Get Dragon Gem">+5 / −2</row>
+      </gain>
+      <lose>
+        <row source="Backstab (Thief)">1–5</row>
+        <row source="Blob (Monster)">5</row>
+        <row source="Flame Wall (Dragon)">5</row>
+        <row source="Hex (Goblins)">1–4</row>
+        <row source="Rats (Event)">2</row>
+        <row source="Scratch (Dragon)">5</row>
+        <row source="Soporific Spores (Cave)">5</row>
+      </lose>
+    </grit>
+  </role>
+</vast-rules>

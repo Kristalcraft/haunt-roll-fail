@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vast-rules part="terrain-variants" game="Vast: The Crystal Caverns" lang="en">
+  <section id="terrain">
+    <title>Terrain tiles (optional)</title>
+    <intro>8 Terrain tiles in box. Players must agree to use Terrain before starting. Adds variety and obstacles.</intro>
+    <types>Canyon, Lake, Magma, Mushroom Forest, Pits (×3), River</types>
+    <movement>Move between Terrain and Cave if shared edge not blocked by wall and neither space impassable. Once per action or encounter: exit Terrain across any edge, even to open space; if enter open space, place Dark tile as filling open edge next to Lit. Knight must still reveal Dark tile as Encounter.</movement>
+    <collapse>Last normal Cave tile placed → Collapse as usual. Terrain removed only if half or more edges exposed (remover’s choice). Collapsed Terrain counts toward tiles collapsed per turn.</collapse>
+    <cave-in-wrath>Terrain removed from map may be placed again later.</cave-in-wrath>
+
+    <terrain-effect id="canyon">Bridge center must touch Cave tile; Dark tile opposite Bridge. Outside spaces impassable. Surface Dragon: Wing crosses one impassable space straight line. Thief: Climb same. Cannot end on impassable.</terrain-effect>
+    <terrain-effect id="lake">Goblin entering loses 1 Population. On Lake, Lake spaces count as Lit for movement loss.</terrain-effect>
+    <terrain-effect id="magma">Knight ends turn: −1 Health (ignore if 1 Health). Goblin exits Magma: −1 Pop; ends turn on Magma: Pop 0. Thief ends on Magma: killed. Dragon unharmed.</terrain-effect>
+    <terrain-effect id="mushroom-forest">Pieces protected from outside effects; only attack same space. Restricts Bow, Enchanted Bow, Hex, Hiding Spots, Hiss, Slap, Giant Bats, Hand Crossbow.</terrain-effect>
+    <terrain-effect id="pits">Place all three when prompted; one closest to revealer, others far apart. If 1–2 only legal, place different Terrain instead. Pits adjacent to each other; no visible path. Cannot end turn on Pit.</terrain-effect>
+    <terrain-effect id="river">Enter River: may move with current (arrows) freely; against current uses normal rules. Goblin: −1 Pop on enter; −1 per space against current.</terrain-effect>
+
+    <placement>First time each round when Event revealed (any player). Not after Collapse begins. Cave chooses; no Cave → revealer chooses. After filling new open edges with Cave tiles. Not touching another Terrain (even corner). At least one edge with Cave tile. No valid spot → no Terrain.</placement>
+    <note>Terrain edges open for movement; do not prompt Dark placement except Canyon bridge treated like Lit for adjacent fills.</note>
+  </section>
+
+  <section id="role-variants">
+    <title>Role variants (player counts)</title>
+    <note>Except where noted, normal rules apply. Variant cards listed in rulebook pages 17–18.</note>
+
+    <players count="5">Knight vs Goblins vs Dragon vs Cave vs Thief — full game (recommended first: all except Thief).</players>
+    <players count="4">Knight vs Goblins vs Dragon vs Cave; OR any 3 vs Thief (see 3-player section for other roles).</players>
+
+    <players count="3">
+      <variant id="k-g-d">Knight vs Goblins vs Dragon — Dragon gets Past Plunder card. All lose if Cave collapses.</variant>
+      <variant id="k-g-c">Knight vs Goblins vs Cave — Knight Flare card. Knight smash 5 Crystals + escape; Goblins kill Knight; Cave collapses.</variant>
+      <variant id="k-d-c">Knight vs Dragon vs Cave — Goblin Infestation + Monsters (Normal line A); Dragon +2 Hunger→Wakefulness (cannot move back). Knight/Dragon/Cave wins as standard; Knight dead → skip Knight turns.</variant>
+      <variant id="g-d-c">Ash Dragon card. Goblins kill Dragon; Dragon escapes; Cave collapses.</variant>
+    </players>
+
+    <players count="2">
+      <variant id="k-g">Past Plunder for Goblins. Knight smash 5 Crystals + escape; Goblins kill Knight; both lose if Cave collapses.</variant>
+      <variant id="k-d">Goblin Infestation + Monsters; Past Plunder Dragon; +2 Hunger→Wakefulness. Knight kill Dragon; Dragon escape or Knight killed by Goblin Ambush; both lose if collapse.</variant>
+      <variant id="k-c">Remove Daring/Eagle-Eyed; Flare + Goblin Infestation (Tough B). Knight smash 5 + escape; Cave collapse or Knight Ambush death.</variant>
+      <variant id="k-t">Goblin Infestation (Monsters C); Thief Flare. Knight smash 5–6 + escape (agree count); Thief wins on Knight Ambush kill or stash Treasures = Knight’s crystal goal; both lose if collapse.</variant>
+      <variant id="g-d">Ash Dragon; Past Plunder Goblins. Standard wins; both lose if collapse.</variant>
+      <variant id="g-c">Flare Goblins. Goblins smash 5 Crystals; Cave collapses.</variant>
+      <variant id="g-t">Flare both. Goblins smash 5; Thief stash 6; both lose if collapse.</variant>
+      <variant id="d-c">+2 Hunger→Wakefulness (locked). Dragon escape vs Cave collapse.</variant>
+      <variant id="d-t">Ash Dragon; Thief Flare. Standard wins; both lose if collapse.</variant>
+      <variant id="c-t">Thief Flare; Place Treasure optional. Thief stash 6; Cave collapses.</variant>
+    </players>
+
+    <solo>
+      <rule>Cave not playable solo. Use Alone in the Dark instead of Cave Reference for tile place/remove.</rule>
+      <knight>Remove Daring/Eagle-Eyed; Alone in Dark + Goblin Infestation + Monsters + Event/Treasure decks; difficulty Easy/Medium/Hard; win smash 5 + escape; lose if killed or collapse.</knight>
+      <goblins>Alone in Dark + Flare; win smash 5; lose collapse.</goblins>
+      <dragon>Alone in Dark; Easy all 4 Hunger→Wakefulness; Medium 2; Hard 0; win awaken + escape; lose collapse.</dragon>
+      <thief>Alone in Dark + Flare; stash 6; lose collapse.</thief>
+    </solo>
+  </section>
+
+  <section id="difficulty">
+    <title>Difficulty variants (per role)</title>
+    <knight-levels summary="Adjust Dragon Health or Crystals to smash">Lady Expert 7 Health / 6 Crystals smash at 4 Strength; Baroness Hard 6/6; Knight Standard 5/5; Squire Easy 4/4; Novice Easiest 3/4 at 2 Strength smash.</knight-levels>
+    <goblin-levels summary="Adjust Knight Health">Warlord 9, Master 8, Chief 7, Boss 6, Miscreant 5.</goblin-levels>
+    <dragon-levels summary="Adjust Wakefulness required">Ancient 13 + Shriek 3 turns; Elder 13; Standard 11; Whelp 9; Hatchling 7.</dragon-levels>
+    <cave-levels summary="Hatred tokens or fewer tiles">Grand/Great Cave with Hatred tokens; Standard 5 Crystals; Spillway/Lava Tube remove tile types / fewer Crystals to collapse.</cave-levels>
+    <thief-levels summary="Treasures to stash">Invader 8 (first 2 not on upgrades); Prowler 7 (first not on upgrade); Standard 6; Burglar 5; Footpad 4.</thief-levels>
+    <collapse-variant>Randomly remove 2–4 Cave tiles in setup before Crystal shuffle for shorter pre-Collapse game.</collapse-variant>
+    <speed>Shorter: all Easy; Longer: all Hard/Expert.</speed>
+    <campaign>Start Easiest; each win advance one level; first to Expert win = “Your Vastness.”</campaign>
+  </section>
+
+  <section id="ash-dragon">
+    <title>Ash Dragon (variant card)</title>
+    <rule>Dragon +1 Armor (max 4). Goblins may Attack Dragon. On success: −1 Health, Rage −1, Tribe scatters.</rule>
+  </section>
+
+  <section id="easily-forgotten">
+    <title>Easily forgotten rules</title>
+    <general>
+      <rule>Before Collapse, Lit open edges always filled with Dark tiles. After Collapse begins, never fill.</rule>
+      <rule>Lit tile revealed: orient path to Entrance if possible; else legal orientation.</rule>
+    </general>
+    <knight>
+      <rule>Must reveal Dark tiles you enter.</rule>
+      <rule>No Encounters left → cannot move (still place cubes for non-movement/non-Encounter).</rule>
+      <rule>Never below 2 Hero cubes; ignore effects removing starting cubes.</rule>
+      <rule>Bomb enables underground attack but does not replace Strength requirement.</rule>
+      <rule>After Collapse, no Bomb needed underground; surface multiple attacks per turn separate Encounters.</rule>
+    </knight>
+    <goblins>
+      <rule>Shuffle War deck every turn; Monster/Secrets only when empty.</rule>
+      <rule>Multiple overpopulation: still only scatter one Tribe.</rule>
+      <rule>Unassigned Monster must be discarded, not held.</rule>
+    </goblins>
+    <dragon>
+      <rule>Only one Sloth cube per track per turn removed.</rule>
+      <rule>Pride sub-tracks separate; cannot move between without Slither except Pride rules.</rule>
+      <rule>No Goblins: use Slither to move Hunger toward Greed/Pride.</rule>
+    </dragon>
+    <cave>
+      <rule>Draw back to 3 tiles after each placement, not after batch.</rule>
+      <rule>Your turn: Crystal tiles before others; other players’ turns: Crystal first not required.</rule>
+    </cave>
+    <thief>
+      <rule>Carried tokens count on map until stashed.</rule>
+      <rule>Pickpocket/Backstab each other player once per turn.</rule>
+      <rule>Loot Drop resets to 3 when stash Treasure, not on pickup or death.</rule>
+    </thief>
+    <variants>
+      <rule>No Cave player: each places 1 Dark end of turn; Collapse removes 3 each.</rule>
+      <rule>Solo: Alone in the Dark replaces normal tile place/remove, not in addition.</rule>
+    </variants>
+  </section>
+
+  <section id="sample-turns">
+    <title>Sample turns (rulebook)</title>
+    <note>Extended walkthrough on rulebook pages 20–21: Knight Turn 1–2, Goblin Turn 1, Dragon Turn 1, Cave Turn 1, Thief Turn 1. Diagram examples pages 22–23: Cave-In, Wrath, Giant Bats forced movement.</note>
+  </section>
+</vast-rules>

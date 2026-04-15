@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vast-crystal-caverns-rules xmlns="https://haunt-roll-fail.local/rules/vast" version="1.0">
+  <meta>
+    <title>Vast: The Crystal Caverns</title>
+    <designers>Patrick Leder, David Somerville</designers>
+    <publisher>Leder Games</publisher>
+    <copyright>Copyright © 2016–2017 Leder Games</copyright>
+    <source>Official rulebook (PDF)</source>
+    <purpose>Разбивка правил на семантические XML-документы для индексации и использования в большом контексте LLM.</purpose>
+  </meta>
+  <documents>
+    <document href="general.xml" id="general" lang="en">
+      <topics>objectives, initial setup, Cave setup, Cave Reference card, shared rules, Collapse, map connection, forced movement, Dragon die, public info, component limits, rule precedence, FAQ, glossary</topics>
+    </document>
+    <document href="knight.xml" id="knight" lang="en">
+      <topics>Knight victory, setup, turn, Hero cubes, statistics, encounters, tiles, Dragon/Goblins/Thief, crystals, treasures, equipment, Grit, Sidequests</topics>
+    </document>
+    <document href="goblins.xml" id="goblins" lang="en">
+      <topics>Goblins victory, tribes, Rage, Malaise, War cards, Monsters, Secrets, actions, Scatter, crystals</topics>
+    </document>
+    <document href="dragon.xml" id="dragon" lang="en">
+      <topics>Dragon victory, statistics, movement, powers, Sloth and Wakefulness, gems, surfacing, Dragon die</topics>
+    </document>
+    <document href="cave.xml" id="cave" lang="en">
+      <topics>Cave victory, Omen tokens, omens, shaping cave, treasures, events, Rockslides, Collapse</topics>
+    </document>
+    <document href="thief.xml" id="thief" lang="en">
+      <topics>Thief victory, statistics, actions, injuries, Loot Drop, stashing, upgrades, interactions</topics>
+    </document>
+    <document href="terrain-and-variants.xml" id="terrain-variants" lang="en">
+      <topics>terrain tiles, placement, role variants, player counts, difficulty levels, easily forgotten rules, sample turns</topics>
+    </document>
+  </documents>
+</vast-crystal-caverns-rules>

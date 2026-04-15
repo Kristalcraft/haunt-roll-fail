@@ -1,0 +1,386 @@
+<DevelopmentPlan VERSION="0.2.0">
+  <ArchitectureNotes>
+    <objective>Preserve exact Vast rules behavior while making browser runtime, replay evidence, and future AI bot integration easier to reason about and verify.</objective>
+    <non-goal>Do not ship five-player support until Thief mechanics, setup, UI, serialization, and verification are implemented together.</non-goal>
+    <risk-1>Rules logic, browser presentation, and bot decision boundaries currently span multiple files and can drift without explicit contracts.</risk-1>
+    <risk-2>Future AI quality will remain capped if host simulation and legal-action extraction are not made deterministic and inspectable.</risk-2>
+  </ArchitectureNotes>
+
+  <Modules>
+    <M-VAST-RULES NAME="VastRulesCorpus" TYPE="DATA_LAYER" LAYER="0" ORDER="1" STATUS="implemented">
+      <contract>
+        <purpose>Provide semantically structured rule references for gameplay verification and AI grounding.</purpose>
+        <inputs />
+        <outputs>
+          <param name="rule-documents" type="XML corpus" />
+        </outputs>
+        <errors />
+      </contract>
+      <interface>
+        <export-rules-index PURPOSE="Rule index and topic map." />
+      </interface>
+      <depends>none</depends>
+      <target>
+        <source>rules/index.xml</source>
+      </target>
+      <observability>
+        <log-prefix>[VastRules]</log-prefix>
+        <critical-block>BLOCK_RULE_ALIGNMENT</critical-block>
+      </observability>
+      <verification-ref>V-M-VAST-RULES</verification-ref>
+      <notes>
+        <note-1>Use this corpus as the reference surface whenever mechanics are changed or reviewed.</note-1>
+      </notes>
+    </M-VAST-RULES>
+
+    <M-VAST-GAME NAME="VastGameLogic" TYPE="CORE_LOGIC" LAYER="1" ORDER="1" STATUS="implemented">
+      <contract>
+        <purpose>Own the authoritative game state machine for Vast.</purpose>
+        <inputs>
+          <param name="factions" type="List[Faction]" />
+          <param name="options" type="List[Meta.O]" />
+          <param name="actions" type="Action stream" />
+        </inputs>
+        <outputs>
+          <param name="continue" type="Continue" />
+          <param name="updated-game-state" type="Game" />
+        </outputs>
+        <errors>
+          <error code="ILLEGAL_ACTION" />
+          <error code="INVALID_STATE" />
+        </errors>
+      </contract>
+      <interface>
+        <export-Game PURPOSE="Primary Vast game state and transition engine." />
+      </interface>
+      <depends>M-VAST-RULES</depends>
+      <target>
+        <source>vast/game.scala</source>
+      </target>
+      <observability>
+        <log-prefix>[VastGame]</log-prefix>
+        <critical-block>BLOCK_PERFORM_ACTION</critical-block>
+      </observability>
+      <verification-ref>V-M-VAST-GAME</verification-ref>
+      <notes>
+        <note-1>All faction-specific rules must remain traceable to the XML corpus.</note-1>
+      </notes>
+    </M-VAST-GAME>
+
+    <M-VAST-SERIALIZE NAME="VastSerialization" TYPE="UTILITY" LAYER="2" ORDER="1" STATUS="implemented">
+      <contract>
+        <purpose>Turn externalized actions into stable strings and parse them back without semantic drift.</purpose>
+        <inputs>
+          <param name="action" type="Action" />
+          <param name="serialized" type="String" />
+        </inputs>
+        <outputs>
+          <param name="serialized" type="String" />
+          <param name="action" type="Action" />
+        </outputs>
+        <errors>
+          <error code="PARSE_FAILURE" />
+        </errors>
+      </contract>
+      <interface>
+        <export-Serialize PURPOSE="Read/write adapter for Vast action streams." />
+      </interface>
+      <depends>M-VAST-GAME</depends>
+      <target>
+        <source>vast/serialize.scala</source>
+      </target>
+      <observability>
+        <log-prefix>[VastSerialize]</log-prefix>
+        <critical-block>BLOCK_WRITE_PARSE_ROUNDTRIP</critical-block>
+      </observability>
+      <verification-ref>V-M-VAST-SERIALIZE</verification-ref>
+      <notes>
+        <note-1>Serialization stability is required for replay, diagnostics, and future AI training/evaluation loops.</note-1>
+      </notes>
+    </M-VAST-SERIALIZE>
+
+    <M-VAST-BOT NAME="VastBots" TYPE="INTEGRATION" LAYER="2" ORDER="2" STATUS="partial">
+      <contract>
+        <purpose>Select legal actions automatically and expose a clean upgrade path toward stronger AI agents.</purpose>
+        <inputs>
+          <param name="game" type="Game" />
+          <param name="actions" type="List[UserAction]" />
+        </inputs>
+        <outputs>
+          <param name="chosen-action" type="Action" />
+          <param name="evaluations" type="List[ActionEval]" />
+        </outputs>
+        <errors>
+          <error code="NO_LEGAL_ACTION" />
+        </errors>
+      </contract>
+      <interface>
+        <export-BotXX PURPOSE="Generic evaluator-backed bot." />
+        <export-BotKnight PURPOSE="Knight-specific bot." />
+        <export-BotDragon PURPOSE="Dragon-specific bot." />
+      </interface>
+      <depends>M-VAST-GAME</depends>
+      <target>
+        <source>vast/bot.scala</source>
+        <source>vast/bot-knight.scala</source>
+        <source>vast/bot-dragon.scala</source>
+      </target>
+      <observability>
+        <log-prefix>[VastBot]</log-prefix>
+        <critical-block>BLOCK_EVAL_ACTIONS</critical-block>
+      </observability>
+      <verification-ref>V-M-VAST-BOT</verification-ref>
+      <notes>
+        <note-1>Long-term AI work should prefer a stable decision boundary over direct UI coupling.</note-1>
+      </notes>
+    </M-VAST-BOT>
+
+    <M-VAST-THIEF-SUPPORT NAME="VastThiefSupport" TYPE="CORE_LOGIC" LAYER="3" ORDER="1" STATUS="planned">
+      <contract>
+        <purpose>Introduce Thief as a supported fifth-player faction without regressing current four-player gameplay.</purpose>
+        <inputs>
+          <param name="factions" type="List[Faction]" />
+          <param name="thief-actions" type="Action stream" />
+          <param name="rules-reference" type="rules/thief.xml" />
+        </inputs>
+        <outputs>
+          <param name="updated-five-player-state" type="Game" />
+          <param name="thief-ui-and-runtime-support" type="Integrated browser and host behavior" />
+        </outputs>
+        <errors>
+          <error code="THIEF_RULE_GAP" />
+          <error code="FIVE_PLAYER_SETUP_INVALID" />
+        </errors>
+      </contract>
+      <interface>
+        <export-Thief PURPOSE="Planned Thief faction support surface." />
+      </interface>
+      <depends>M-VAST-RULES, M-VAST-GAME, M-VAST-SERIALIZE, M-VAST-BOT</depends>
+      <target>
+        <source>vast/game.scala</source>
+        <source>vast/meta.scala</source>
+        <source>vast/ui.scala</source>
+        <source>vast/serialize.scala</source>
+        <source>vast/bot.scala</source>
+        <source>vast/host.scala</source>
+      </target>
+      <observability>
+        <log-prefix>[VastThief]</log-prefix>
+        <critical-block>BLOCK_ENABLE_THIEF_FIFTH_PLAYER</critical-block>
+      </observability>
+      <verification-ref>V-M-VAST-THIEF-SUPPORT</verification-ref>
+      <notes>
+        <note-1>Keep four-player setup valid while explicitly preparing the engine for a fifth role.</note-1>
+      </notes>
+    </M-VAST-THIEF-SUPPORT>
+
+    <M-VAST-META NAME="VastMeta" TYPE="ENTRY_POINT" LAYER="3" ORDER="1" STATUS="implemented">
+      <contract>
+        <purpose>Bind Vast game logic, UI, bots, assets, and serialization into the shared HRF runtime.</purpose>
+        <inputs>
+          <param name="factions" type="List[Faction]" />
+          <param name="options" type="List[Meta.O]" />
+        </inputs>
+        <outputs>
+          <param name="game-instance" type="Game" />
+          <param name="ui-entry" type="BaseUI" />
+        </outputs>
+        <errors>
+          <error code="INVALID_FACTION_COMBINATION" />
+        </errors>
+      </contract>
+      <interface>
+        <export-Meta PURPOSE="Main metadata registry entry for Vast." />
+      </interface>
+      <depends>M-VAST-GAME, M-VAST-SERIALIZE, M-VAST-BOT</depends>
+      <target>
+        <source>vast/meta.scala</source>
+      </target>
+      <observability>
+        <log-prefix>[VastMeta]</log-prefix>
+        <critical-block>BLOCK_VALIDATE_FACTIONS</critical-block>
+      </observability>
+      <verification-ref>V-M-VAST-META</verification-ref>
+      <notes>
+        <note-1>Current seating and faction limits are part of gameplay correctness and should change only together with full Thief support.</note-1>
+      </notes>
+    </M-VAST-META>
+
+    <M-VAST-UI NAME="VastBrowserUI" TYPE="UI_COMPONENT" LAYER="4" ORDER="1" STATUS="implemented">
+      <contract>
+        <purpose>Render map, factions, overlays, and user interaction for the browser client.</purpose>
+        <inputs>
+          <param name="resources" type="Resources" />
+          <param name="game-state" type="Game" />
+          <param name="user-input" type="Pointer and UI events" />
+        </inputs>
+        <outputs>
+          <param name="rendered-scene" type="Browser UI state" />
+        </outputs>
+        <errors>
+          <error code="ASSET_MISSING" />
+        </errors>
+      </contract>
+      <interface>
+        <export-UI PURPOSE="Vast browser UI renderer and interaction surface." />
+      </interface>
+      <depends>M-VAST-META, M-VAST-GAME</depends>
+      <target>
+        <source>vast/ui.scala</source>
+      </target>
+      <observability>
+        <log-prefix>[VastUI]</log-prefix>
+        <critical-block>BLOCK_RENDER_SCENE</critical-block>
+      </observability>
+      <verification-ref>V-M-VAST-UI</verification-ref>
+      <notes>
+        <note-1>Verification must cover hidden-information rendering and valid-click surfaces, not only visual smoke.</note-1>
+      </notes>
+    </M-VAST-UI>
+
+    <M-VAST-HOST NAME="VastHostSimulation" TYPE="INTEGRATION" LAYER="4" ORDER="2" STATUS="partial">
+      <contract>
+        <purpose>Run bot-driven simulations and off-browser validation loops for Vast.</purpose>
+        <inputs>
+          <param name="batch" type="Generated game instances" />
+          <param name="times" type="Simulation count" />
+        </inputs>
+        <outputs>
+          <param name="results" type="Win distributions and failure artifacts" />
+        </outputs>
+        <errors>
+          <error code="SIMULATION_DIVERGENCE" />
+        </errors>
+      </contract>
+      <interface>
+        <export-Host PURPOSE="Host-side simulation entry point." />
+      </interface>
+      <depends>M-VAST-GAME, M-VAST-BOT, M-VAST-SERIALIZE</depends>
+      <target>
+        <source>vast/host.scala</source>
+        <source>host.scala</source>
+        <source>host.xsbt</source>
+      </target>
+      <observability>
+        <log-prefix>[VastHost]</log-prefix>
+        <critical-block>BLOCK_SIMULATE_GAME</critical-block>
+      </observability>
+      <verification-ref>V-M-VAST-HOST</verification-ref>
+      <notes>
+        <note-1>This module is the most promising bridge between current bots and future stronger AI evaluation loops.</note-1>
+      </notes>
+    </M-VAST-HOST>
+
+    <M-HRF-WEB-RUNTIME NAME="HRFBrowserRuntime" TYPE="ENTRY_POINT" LAYER="5" ORDER="1" STATUS="implemented">
+      <contract>
+        <purpose>Bootstrap the shared browser app, resources, and selected game UI from the HTML entry point.</purpose>
+        <inputs>
+          <param name="url-params" type="Browser params and hash state" />
+          <param name="assets" type="Static resources" />
+        </inputs>
+        <outputs>
+          <param name="loaded-ui" type="Running browser app" />
+        </outputs>
+        <errors>
+          <error code="RESOURCE_LOAD_FAILURE" />
+        </errors>
+      </contract>
+      <interface>
+        <export-HRF PURPOSE="Shared browser runtime entry point." />
+      </interface>
+      <depends>M-VAST-META, M-VAST-UI</depends>
+      <target>
+        <source>hrf.scala</source>
+        <source>index.html</source>
+        <source>serve-local.ps1</source>
+      </target>
+      <observability>
+        <log-prefix>[HRF]</log-prefix>
+        <critical-block>BLOCK_ON_DOCUMENT_LOAD</critical-block>
+      </observability>
+      <verification-ref>V-M-HRF-WEB-RUNTIME</verification-ref>
+      <notes>
+        <note-1>Files required to launch the game in the browser are in scope for Vast work.</note-1>
+      </notes>
+    </M-HRF-WEB-RUNTIME>
+  </Modules>
+
+  <DataFlow>
+    <DF-START-BROWSER NAME="Browser startup and Vast boot" TRIGGER="Open index.html and choose Vast">
+      <step-1>`hrf.scala` loads resources and discovers registered game metadata.</step-1>
+      <step-2>`vast.Meta` validates faction combination and creates the `Game` instance.</step-2>
+      <step-3>`vast.UI` attaches browser panes and renders the initial cave state.</step-3>
+      <evidence>Successful `sbt fastOptJS`, local HTTP serve, and a browser smoke run that reaches a playable initial board.</evidence>
+    </DF-START-BROWSER>
+
+    <DF-RESOLVE-TURN NAME="Resolve a player turn" TRIGGER="Human or bot chooses a legal action">
+      <step-1>The acting faction receives legal actions from the current `Continue` state.</step-1>
+      <step-2>`vast.Game` applies rule-specific transitions and emits the next `Continue`.</step-2>
+      <step-3>`vast.UI` updates rendered state while preserving hidden information and legal selection affordances.</step-3>
+      <evidence>Targeted mechanic checks plus browser scenario validation for asymmetric faction actions and victory progress.</evidence>
+    </DF-RESOLVE-TURN>
+
+    <DF-SERIALIZE-REPLAY NAME="Serialize and replay action stream" TRIGGER="External action or replay/debug flow">
+      <step-1>`vast.Serialize` writes an externalized action string.</step-1>
+      <step-2>The string is parsed back into an action.</step-2>
+      <step-3>The replayed action remains semantically equivalent and does not diverge from the intended game transition.</step-3>
+      <evidence>Round-trip checks and failure artifacts captured by host-side simulation code.</evidence>
+    </DF-SERIALIZE-REPLAY>
+
+    <DF-BOT-DECISION NAME="Bot selects a legal move" TRIGGER="Bot-controlled faction turn">
+      <step-1>The host or runtime collects legal `UserAction` values for the current faction.</step-1>
+      <step-2>Bot evaluation scores candidate actions.</step-2>
+      <step-3>The selected action is applied through the same game engine as human moves.</step-3>
+      <evidence>Simulation runs complete without illegal-action divergence and produce stable result distributions.</evidence>
+    </DF-BOT-DECISION>
+
+    <DF-RULES-ALIGNMENT NAME="Align implementation with XML rules" TRIGGER="Mechanic change or review">
+      <step-1>Relevant `rules/*.xml` topics are identified for the mechanic under change.</step-1>
+      <step-2>The corresponding code path in `vast/game.scala` and related UI/bot/serialization code is reviewed.</step-2>
+      <step-3>Verification scenarios are updated so future work keeps the rule and code in sync.</step-3>
+      <evidence>Named verification scenarios referencing both the rules corpus and the implementation modules.</evidence>
+    </DF-RULES-ALIGNMENT>
+
+    <DF-ENABLE-THIEF NAME="Enable Thief as the fifth player" TRIGGER="Implementation wave for Thief support begins">
+      <step-1>`rules/thief.xml` is treated as the contract reference for setup, actions, scoring, and interactions.</step-1>
+      <step-2>`vast.Game` and `vast.Meta` are updated to allow a five-player composition that includes Thief.</step-2>
+      <step-3>`vast.UI`, serialization, host simulation, and bots are extended so Thief can participate without special-case breakage.</step-3>
+      <evidence>Five-player startup succeeds, Thief-specific actions are legal and replayable, and four-player regression checks still pass.</evidence>
+    </DF-ENABLE-THIEF>
+  </DataFlow>
+
+  <ImplementationOrder>
+    <Phase-1 name="Baseline governance" status="pending">
+      <goal>Make the current Vast architecture explicit and navigable before deeper feature work.</goal>
+      <step-1 module="M-VAST-RULES" status="done" verification="V-M-VAST-RULES">Anchor the XML rule corpus as a first-class reference.</step-1>
+      <step-2 module="M-VAST-GAME" status="done" verification="V-M-VAST-GAME">Document the core rules engine as the authority for state transitions.</step-2>
+      <step-3 module="M-VAST-SERIALIZE" status="done" verification="V-M-VAST-SERIALIZE">Document replay and action-transport stability requirements.</step-3>
+    </Phase-1>
+
+    <Phase-2 name="Runtime and UX verification" status="pending">
+      <goal>Stabilize browser startup and high-value gameplay interaction surfaces.</goal>
+      <step-1 module="M-VAST-META" status="done" verification="V-M-VAST-META">Document faction validation and asset/runtime binding.</step-1>
+      <step-2 module="M-VAST-UI" status="done" verification="V-M-VAST-UI">Document the rendering and click-path surface that must stay aligned with rules.</step-2>
+      <step-3 module="M-HRF-WEB-RUNTIME" status="done" verification="V-M-HRF-WEB-RUNTIME">Document browser bootstrap files needed for launch.</step-3>
+    </Phase-2>
+
+    <Phase-3 name="Bot strength and AI readiness" status="pending">
+      <goal>Prepare a safer surface for stronger bot play and future AI agent integration.</goal>
+      <step-1 module="M-VAST-BOT" status="done" verification="V-M-VAST-BOT">Document current heuristic bots and identify evaluation seams.</step-1>
+      <step-2 module="M-VAST-HOST" status="done" verification="V-M-VAST-HOST">Document the host/simulation path for batch validation and future AI benchmarking.</step-2>
+    </Phase-3>
+
+    <Phase-4 name="Thief enablement" status="pending">
+      <goal>Implement and verify Thief as the fifth supported player role.</goal>
+      <step-1 module="M-VAST-THIEF-SUPPORT" status="pending" verification="V-M-VAST-THIEF-SUPPORT">Map `rules/thief.xml` to concrete engine, UI, serialization, and bot requirements.</step-1>
+      <step-2 module="M-VAST-META" status="pending" verification="V-M-VAST-META">Expand faction validation and setup from four-player-only to verified five-player support.</step-2>
+      <step-3 module="M-VAST-UI" status="pending" verification="V-M-VAST-UI">Adjust UI and browser interactions for a fifth faction without regressions.</step-3>
+    </Phase-4>
+  </ImplementationOrder>
+
+  <ExecutionPolicy>
+    <default-profile>balanced</default-profile>
+    <controller-owns>docs/development-plan.xml, docs/knowledge-graph.xml, docs/verification-plan.xml</controller-owns>
+    <worker-owns>Only approved Vast-related source files, browser-launch files, and nearby verification artifacts inside the declared write scope.</worker-owns>
+  </ExecutionPolicy>
+</DevelopmentPlan>

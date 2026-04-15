@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vast-rules part="dragon" game="Vast: The Crystal Caverns" lang="en">
+  <role id="dragon">
+    <victory>
+      <step>Remove 11 Sloth cubes to Wakefulness (wake up).</step>
+      <step>Become surfaced by ending turn on Crystal tile (smashes Crystal if present).</step>
+      <step>Escape by reaching Entrance tile.</step>
+    </victory>
+
+    <setup>
+      <sloth-cubes>In Sloth boxes</sloth-cubes>
+      <eaten-goblins>0</eaten-goblins>
+      <health>5</health>
+      <hand>Shuffle Power cards; draw 3</hand>
+      <piece>Awakened piece near board; begin underground</piece>
+      <first-turn>Place Sleeping Dragon on Knight tile (or Entrance if no Knight)</first-turn>
+    </setup>
+
+    <turn-summary>
+      <phase>Move and Use Powers</phase>
+      <phase>Pick Up Treasure</phase>
+      <phase>Place Dragon Gem</phase>
+      <phase>Replace Hand (draw cards equal to Spirit)</phase>
+    </turn-summary>
+
+    <statistics>
+      <armor>Defense vs attacks and some effects outside your turn.</armor>
+      <spirit>Power cards drawn at end of turn for new hand.</spirit>
+    </statistics>
+
+    <gems-other-players>
+      <knight>Roll die: center −2 Grit; else +5 Grit. Return Gem to Dragon.</knight>
+      <goblins>Center: scatter. Else: may plunder. Return to Dragon after resolution.</goblins>
+      <thief>Center: killed (no Loot Drop). Else Thief may spend another Action cube to skip roll; else take and stash. Until stashed, Dragon may use Gem symbol. Stashed → supply. Killed before stash: Gem on tile.</thief>
+    </gems-other-players>
+
+    <phase id="move-and-powers">
+      <free-move>1 or 2 tiles straight line once per turn without Power cards; before or after powers.</free-move>
+      <powers>Discard Power cards matching symbols on board. Any powers, any times, paying each cost. Question mark cost = any symbol.</powers>
+      <dragon-gems-on-map>Each Gem’s symbol once per turn; spending does not remove Gem; may flip facedown spent, flip up at end of turn.</dragon-gems-on-map>
+      <movement-underground>Enter Dark; move through walls; entering another player does not prompt their attack.</movement-underground>
+      <movement-surface>Cannot enter Dark or through walls. Entering Knight or Goblin: attack only if their Strength allows attack (Goblin &gt; Armor; Knight ≥ Armor).</movement-surface>
+    </phase>
+
+    <killing-goblins>
+      <rule>Claw, Scratch, Hiss vs Goblins: increase Eaten Goblins by total Population lost.</rule>
+    </killing-goblins>
+
+    <killing-thief>
+      <rule>Claw or Scratch kills Thief: draw Power cards = Loot Drop Level.</rule>
+    </killing-thief>
+
+    <phase id="pick-up-treasure">
+      <rule>After all movement, pick up Treasure on your tile.</rule>
+      <rule>First Treasure per turn: give to Cave for Greed (move cube Greed → Wakefulness).</rule>
+      <rule>Multiple Treasures: keep beyond first; give one per later turn.</rule>
+      <rule>All four Sloth cubes removed from Greed: return further Treasures to Cave without effect.</rule>
+    </phase>
+
+    <phase id="place-gem">
+      <rule>Place Dragon Gem of your choice on current Cave tile if you have any.</rule>
+    </phase>
+
+    <phase id="replace-hand">
+      <rule>Discard remaining; shuffle all Power cards; draw cards = Spirit.</rule>
+    </phase>
+
+    <awakening>
+      <tracks>
+        <greed>Pick up Treasure, return to Cave (4 cubes on track)</greed>
+        <hunger>Decrease Eaten Goblins by 2 (4 cubes)</hunger>
+        <pride>Reveal Event tile (4 cubes); OR don’t move (1 cube); OR place Dragon Gem while ≥1 Gem on map (1 cube)</pride>
+      </tracks>
+      <rule>Up to 3 Sloth cubes per turn, only 1 per Sloth track. All Pride conditions share Pride track.</rule>
+      <rule>11+ cubes on Wakefulness: awaken. Replace Slumbering with Awakened piece. Cannot fall asleep again.</rule>
+    </awakening>
+
+    <surfacing>
+      <rule>When awake, end turn on Crystal tile to surface (smashes Crystal).</rule>
+      <rule>Surface: entering others resolves attack as if they attacked you (see Knight/Goblins).</rule>
+      <rule>Win: surface then move onto Entrance.</rule>
+    </surfacing>
+
+    <powers-summary>
+      <power name="Claw">Roll Dragon die. Goblins scatter; eat Goblins equal scattered Population; move Knight 1; Thief killed.</power>
+      <power name="Flame">Roll die; reveal affected Dark tiles.</power>
+      <power name="Wing">Move up to 2 straight or 1 through wall.</power>
+      <power name="Hiss">Force Goblin Tribe anywhere hidden, −1 Population; eat 1 Goblin.</power>
+      <power name="Slither">Move Sloth cube between Sloth tracks with empty space.</power>
+      <power name="Swat">Move Gem or Treasure on adjacent space 5 spaces any direction.</power>
+      <power name="Scorch">Reveal all surrounding Dark tiles.</power>
+      <power name="Burn">Reveal any Dark tile on map.</power>
+      <power name="Slap">Move Knight from adjacent up to 3 spaces.</power>
+      <power name="Shriek">Place Shriek token; when rolling Dragon die may spend to reroll.</power>
+      <power name="Scratch">Attack Knight, all Goblin Tribes, or Thief on tile: Knight −5 Grit; Goblins to 0 Population and eat; Thief killed.</power>
+      <power name="Flame Wall">Adjacent visible tile; entering: Knight −5 Grit; Goblin −1 Population; Thief killed; Dragon immune. Return token start of next turn.</power>
+      <power name="Smash">Smash Crystal on your tile.</power>
+      <power name="Wrath">Roll die; Collapse tile; scatter Goblins; move others adjacent; reconnect if split.</power>
+    </powers-summary>
+
+    <note>Full costs printed on Dragon board (Armor | Spirit pairs per row).</note>
+    <note>While surfaced or during Collapse, Knight can attack without Bomb; multiple attacks per turn on surface.</note>
+  </role>
+</vast-rules>

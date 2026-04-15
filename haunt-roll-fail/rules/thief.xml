@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vast-rules part="thief" game="Vast: The Crystal Caverns" lang="en">
+  <role id="thief">
+    <victory>
+      <primary>Acquire and stash 6 Treasure or Dragon Gem tokens to break curse.</primary>
+    </victory>
+
+    <setup>
+      <tokens>Action die, Action cubes, Stat tokens light-gray near board</tokens>
+      <loot-drop>Token on “3” Loot Drop Level</loot-drop>
+      <piece>Entrance before first turn</piece>
+      <vaults>Vault tokens near board</vaults>
+    </setup>
+
+    <turn-summary>
+      <phase>Assign Stat Tokens</phase>
+      <phase>Move and Take Actions</phase>
+      <end>End when out of Movement or Action cubes, or choose to do nothing. Remove all Action cubes at end of turn.</end>
+    </turn-summary>
+
+    <statistics>
+      <movement>Tiles you can move onto this turn.</movement>
+      <stealth>Avoid attacks from other players.</stealth>
+      <thievery>Number of Action cubes per turn.</thievery>
+      <rule-assign>Place one Stat token each on Movement, Stealth, Thievery; Action cubes = Thievery value.</rule-assign>
+    </statistics>
+
+    <movement-rules>
+      <rule>Enter Lit and Dark; enter occupied tiles. Cannot cross walls or impassable terrain without Climb.</rule>
+      <rule>Ended movement on Dark: may peek at tile and may reveal (orient as you choose). Ambush on reveal: Goblins do not attack you or Knight later.</rule>
+      <rule>Target each other player once per turn with actions. Target only if Stealth &gt; target Perception (see Interacting).</rule>
+    </movement-rules>
+
+    <action id="loot">
+      <rule>Collect one Treasure or Dragon Gem on your space.</rule>
+      <one-cube>Take Treasure or Gem. If Gem, roll Dragon die; center kills you.</one-cube>
+      <two-cubes>Take Gem without roll.</two-cubes>
+    </action>
+
+    <action id="pickpocket">
+      <rule>Steal from player on your space. 1 cube: roll 4+; 2 cubes: 2+; 3 cubes: auto.</rule>
+      <upgrade>Sticky Fingers: once per turn reroll Pickpocket.</upgrade>
+      <success>Treasure from Cave; Knight Treasure card to bottom or random; Goblin Secrets card; Dragon Sloth Wakefulness→Greed.</success>
+    </action>
+
+    <action id="pick-lock">
+      <rule>Vault on space. 1 cube: 4+; 2 cubes: 2+; 3 cubes: auto.</rule>
+      <upgrade>Lock Picking Kit: −1 Action cube cost.</upgrade>
+      <success>Remove Vault; Treasure from Cave supply.</success>
+      <limit>Each Vault once per turn.</limit>
+    </action>
+
+    <action id="climb">
+      <rule>2 cubes: through wall. 3 cubes: impassable terrain, not ending on it.</rule>
+      <upgrade>Climbing Gear: −1 cube.</upgrade>
+    </action>
+
+    <action id="backstab">
+      <rule>Injure player on space. 1 Light; 2 Moderate; 3 Heavy.</rule>
+      <upgrade>Hand Crossbow: visible player up to 3 spaces.</upgrade>
+      <injuries>
+        <row target="Knight" light="-1 Grit" moderate="-3 Grit" heavy="-5 Grit"/>
+        <row target="Goblins" light="-1 Pop" moderate="-2 Pop" heavy="-3 Pop"/>
+        <row target="Dragon" light="Discard 1 Power" moderate="2" heavy="3"/>
+      </injuries>
+    </action>
+
+    <action id="hide-loot">
+      <rule>X cubes: reduce Loot Drop Level by X.</rule>
+      <unnatural-evasion>First attack by another player each turn: roll Action die; 4+ attack fails and you may move 1 space.</unnatural-evasion>
+    </action>
+
+    <interacting-with-others>
+      <rule>Knight/Goblins target you: their Perception &gt; your Stealth.</rule>
+      <rule>Dragon and Cave always target you.</rule>
+      <rule>You Pickpocket/Backstab Knight/Goblins: your Stealth &gt; their Perception.</rule>
+      <rule>You Pickpocket/Backstab Dragon: Stealth &gt; Dragon Armor.</rule>
+      <rule>If another player attacks you, you are killed.</rule>
+    </interacting-with-others>
+
+    <perception-of-others>
+      <knight>Perception from Hero cubes</knight>
+      <goblins>Population + 1</goblins>
+      <dragon>No Perception</dragon>
+      <cave>No Perception</cave>
+    </perception-of-others>
+
+    <carrying-and-stashing>
+      <rule>Acquired tokens on Unstashed space; carry to Entrance to stash.</rule>
+      <rule>Each carried Treasure/Gem −1 Stealth.</rule>
+      <rule>Enter Entrance: after effects, stash all.</rule>
+      <rule>Stash Gem: return to Dragon; take Treasure from Cave to stash.</rule>
+      <rule>Stash Treasure: place on upgrade space; Loot Drop Level to 3.</rule>
+    </carrying-and-stashing>
+
+    <dying>
+      <rule>Drop Treasure/Gems on tile; piece to board.</rule>
+      <rule>Killer gains bonus per Loot Drop Level (Knight Grit / Goblins Secrets or Rage / Dragon Power cards).</rule>
+      <rule>First turn after death: spawn Entrance.</rule>
+    </dying>
+
+    <upgrades>
+      <rule>Stash Treasure on upgrade space to gain upgrade immediately.</rule>
+      <rule>Cave Soporific Spores removes upgrade token but keeps stashed Treasure on board for victory.</rule>
+      <stat-boosts>+1 Movement, Stealth, Thievery permanently (max 5).</stat-boosts>
+      <flip-tokens>2→3, 3→4, ALL 4 upgrades.</flip-tokens>
+    </upgrades>
+  </role>
+</vast-rules>

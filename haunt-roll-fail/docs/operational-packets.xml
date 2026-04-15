@@ -1,0 +1,115 @@
+<OperationalPackets VERSION="0.1.0">
+  <ExecutionPacketTemplate>
+    <ExecutionPacket>
+      <module-id>M-VAST-THIEF-SUPPORT</module-id>
+      <module-name>VastThiefSupport</module-name>
+      <purpose>Implement verified Thief support as the fifth player without regressing current four-player gameplay.</purpose>
+      <write-scope>
+        <file-1>vast/game.scala</file-1>
+        <file-2>vast/meta.scala</file-2>
+        <file-3>vast/ui.scala</file-3>
+        <file-4>vast/serialize.scala</file-4>
+        <file-5>vast/bot.scala</file-5>
+        <file-6>vast/host.scala</file-6>
+      </write-scope>
+      <contract-excerpt><![CDATA[
+M-VAST-THIEF-SUPPORT introduces Thief as a supported fifth-player faction and must keep four-player setups working.
+      ]]></contract-excerpt>
+      <graph-entry-excerpt><![CDATA[
+M-VAST-THIEF-SUPPORT depends on rules/thief.xml plus the existing game, UI, serialization, bot, and host modules.
+      ]]></graph-entry-excerpt>
+      <dependency-contract-summaries>
+        <dependency-1 module="M-VAST-RULES">`rules/thief.xml` is the semantic source of truth for Thief behavior.</dependency-1>
+        <dependency-2 module="M-VAST-GAME">The game engine remains the authority for legal actions and state transitions.</dependency-2>
+        <dependency-3 module="M-VAST-UI">UI changes must not leak hidden information or break current supported factions.</dependency-3>
+      </dependency-contract-summaries>
+      <verification-excerpt><![CDATA[
+Run compile, browser bundle, five-player startup, and replay/simulation checks that include Thief.
+      ]]></verification-excerpt>
+      <expected-graph-delta-fields>
+        <field-1>imports</field-1>
+        <field-2>exports</field-2>
+        <field-3>annotations</field-3>
+        <field-4>CrossLinks</field-4>
+      </expected-graph-delta-fields>
+      <expected-verification-delta-fields>
+        <field-1>test-files</field-1>
+        <field-2>module-checks</field-2>
+        <field-3>required-log-markers</field-3>
+        <field-4>follow-up-checks</field-4>
+      </expected-verification-delta-fields>
+      <notes>
+        <note-1>Workers should prove both new five-player behavior and non-regression of four-player flows.</note-1>
+      </notes>
+    </ExecutionPacket>
+  </ExecutionPacketTemplate>
+
+  <GraphDeltaTemplate>
+    <GraphDelta module="M-VAST-THIEF-SUPPORT">
+      <imports-added>
+        <import-1>M-VAST-RULES</import-1>
+      </imports-added>
+      <imports-removed />
+      <exports-added>
+        <export-1>Thief</export-1>
+      </exports-added>
+      <exports-removed />
+      <annotations-added>
+        <annotation-1>&lt;type-Thief PURPOSE="Supported fifth-player faction for Vast" /&gt;</annotation-1>
+      </annotations-added>
+      <annotations-removed />
+      <cross-links-added>
+        <CrossLink from="M-VAST-THIEF-SUPPORT" to="M-VAST-GAME" relation="extends faction logic in" />
+      </cross-links-added>
+      <cross-links-removed />
+      <notes>
+        <note-1>Only list graph facts that changed in the implementation wave.</note-1>
+      </notes>
+    </GraphDelta>
+  </GraphDeltaTemplate>
+
+  <VerificationDeltaTemplate>
+    <VerificationDelta module="M-VAST-THIEF-SUPPORT">
+      <test-files-added>
+        <file-1>rules/thief.xml</file-1>
+        <file-2>vast/game.scala</file-2>
+      </test-files-added>
+      <test-files-removed />
+      <module-checks>
+        <command-1>sbt compile</command-1>
+        <command-2>sbt fastOptJS</command-2>
+        <command-3>Run a five-player startup and focused Thief scenario pass.</command-3>
+        <command-4>Run host-side replay/simulation checks with Thief actions.</command-4>
+      </module-checks>
+      <required-log-markers>
+        <marker-1>[VastThief][enable][BLOCK_ENABLE_THIEF_FIFTH_PLAYER]</marker-1>
+      </required-log-markers>
+      <required-trace-assertions>
+        <assertion-1>Thief enablement must not break existing four-player setups.</assertion-1>
+      </required-trace-assertions>
+      <wave-follow-up>
+        <item-1>Re-run browser interaction checks for any UI panel changed to support the fifth player.</item-1>
+      </wave-follow-up>
+      <phase-follow-up>
+        <item-1>Do not close the Thief phase until both five-player and four-player evidence are green.</item-1>
+      </phase-follow-up>
+    </VerificationDelta>
+  </VerificationDeltaTemplate>
+
+  <FailurePacketTemplate>
+    <FailurePacket>
+      <scenario>Five-player setup with Thief fails to start or diverges from the rules.</scenario>
+      <contract-ref>M-VAST-THIEF-SUPPORT / V-M-VAST-THIEF-SUPPORT / scenario-1</contract-ref>
+      <expected-evidence>
+        <marker-1>[VastThief][enable][BLOCK_ENABLE_THIEF_FIFTH_PLAYER]</marker-1>
+        <assertion-1>Five-player setup succeeds and exposes only legal Thief actions.</assertion-1>
+      </expected-evidence>
+      <observed-evidence>
+        <log-1>Observed startup validation failure or illegal Thief action set.</log-1>
+        <trace-1>first divergent step in setup, render, serialization, or simulation path</trace-1>
+      </observed-evidence>
+      <first-divergent-block>BLOCK_ENABLE_THIEF_FIFTH_PLAYER</first-divergent-block>
+      <suggested-next-action>Read `rules/thief.xml`, inspect the setup and legal-action boundary, and apply the smallest fix that preserves four-player behavior.</suggested-next-action>
+    </FailurePacket>
+  </FailurePacketTemplate>
+</OperationalPackets>

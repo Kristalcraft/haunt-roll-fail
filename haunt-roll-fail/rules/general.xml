@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<vast-rules part="general" game="Vast: The Crystal Caverns" lang="en">
+  <section id="objectives">
+    <title>Victory objectives (summary)</title>
+    <role id="knight">The Knight must kill the Dragon.</role>
+    <role id="goblins">The Goblins must kill the Knight.</role>
+    <role id="dragon">The Dragon must wake up and escape the Cave.</role>
+    <role id="cave">The Cave must fully expand and then collapse to bury everyone.</role>
+    <role id="thief">The Thief must collect and stash treasures.</role>
+    <note>Full conditions per role are detailed in each role chapter.</note>
+  </section>
+
+  <section id="role-setup">
+    <title>Role setup</title>
+    <rule>If you have 5 players, play with all of the roles.</rule>
+    <rule>If you have 4 players or fewer, choose a variant from the Role Variants chapter (rulebook page 17).</rule>
+    <rule>If it is your first game, the rulebook recommends playing with all roles except the Thief.</rule>
+    <rule>Seat clockwise turn order: Knight, Goblins, Dragon, Cave, Thief. Play in this order.</rule>
+    <rule>Set up player boards and components as shown in the rulebook; see each role chapter for details.</rule>
+    <rule>If there is no Cave player, you still use Event deck and Treasure deck.</rule>
+  </section>
+
+  <section id="cave-setup">
+    <title>Cave setup (map)</title>
+    <step>Place the Entrance tile on the center of the table.</step>
+    <step>Set aside 9 Crystal tiles and 6 Vault tiles. If there is no Thief player, return Vault tiles to the box.</step>
+    <step>Shuffle the other tiles and place four, Dark side up, adjacent to the Entrance tile.</step>
+    <step>Divide remaining tiles evenly into 3 piles; shuffle 3 Crystal tiles and 2 Vault tiles (if Thief) into each pile; stack the piles.</step>
+    <step>Place Cave Reference card where all players can access it, showing the side with “The Cave Grows…”</step>
+  </section>
+
+  <section id="cave-tiles">
+    <title>Cave tiles</title>
+    <rule>All Cave tiles have Dark and Lit sides. Dark side shows a Goblin Tribe symbol. Lit side shows explored Cave.</rule>
+    <rule beware="true">Even without a Cave player, the Cave can still collapse, causing all players to lose. Read Cave Reference card and Cave chapter.</rule>
+  </section>
+
+  <section id="definitions">
+    <title>Tile positions and distance</title>
+    <term name="Adjacent">Tiles touching in the four cardinal directions (not diagonal).</term>
+    <term name="Surrounding">All adjacent tiles plus all four diagonals.</term>
+    <term name="Distance">When moving or counting distance between tiles, always count orthogonally, not diagonally.</term>
+  </section>
+
+  <section id="cave-reference-card">
+    <title>Cave Reference card — “The Cave Grows…”</title>
+    <rule>The Cave places 1 tile on its turn.</rule>
+    <rule>If there is no Cave player, each player places 1 tile at the end of their own turn.</rule>
+    <rule>Flip this card when the last Cave tile is placed. The Collapse begins on the next turn.</rule>
+    <rule variant="Alone in the Dark">Alone in the Dark Variant card (solo / no Cave): At end of your turn, draw and place a number of tiles equal to the greatest of: ALL — revealed Crystal tiles (including collapsed); Knight — Hero cubes available or placed; Goblins — Population of largest Tribe; Dragon — Spirit; Thief — Movement. If Collapse has begun, remove this number of tiles instead. When selecting tiles to collapse: Crystal tiles first, then Dark, then Lit.</rule>
+  </section>
+
+  <section id="general-rules-intro">
+    <title>General rules chapter</title>
+    <note>Rules apply to all five roles. Most are repeated in role chapters when relevant. If first read, skim section titles; return to this chapter for specific questions.</note>
+  </section>
+
+  <section id="revealing-dark-tiles">
+    <title>Revealing Dark tiles</title>
+    <rule>Dark tiles flip to Lit through Knight entering, Dragon Flame power, Flare card, etc.</rule>
+    <rule>If role placement rules conflict with these rules, satisfy only the role’s rules if you must choose; if both can be satisfied, you must do so.</rule>
+    <steps title="When you reveal a Dark tile, before anything else">
+      <step order="1">Orient the tile: rotate to your choice; at least one open edge of the revealed tile must connect to the Entrance through open edges (ignore if impossible). If multiple tiles revealed simultaneously, reveal and orient one at a time; you choose order.</step>
+      <step order="2">Fill open edges: fill all new open edges with Dark tiles from Cave player, or from Cave tile stack if no Cave player. Once Collapse has begun, do not fill open edges for the remainder of the game.</step>
+    </steps>
+    <rule>After all reveals for this event, resolve effects of revealing those tiles (see Knight chapter), then resume play.</rule>
+  </section>
+
+  <section id="collapse">
+    <title>The Collapse</title>
+    <rule>When all Cave tiles are placed, Collapse begins at the start of the next player’s turn.</rule>
+    <rule>During Collapse: do not fill open edges on revealed tiles.</rule>
+    <rule>During Cave’s Shape the Cave phase: instead of adding a tile, Cave removes 3 tiles from the map. If no Cave player, each player removes 3 tiles at end of their turn.</rule>
+    <rule>When removing tiles for Collapse: first tiles touching only one tile, then tiles touching only two. If multiple eligible, remover chooses. If a revealed Crystal tile can be removed, it must be removed first. If Dark tile removed, reveal it to check for Crystal.</rule>
+    <rule>If 5 Crystal tiles have been removed, game ends: Cave wins. If no Cave player, all players lose.</rule>
+    <rule>Entrance tile can never be removed. Return tokens on removed tiles to owners; forced movement for pieces on removed tiles.</rule>
+    <rule>Tiles can also be removed by Goblins’ Cave-In Secrets and Dragon’s Wrath.</rule>
+    <subsection id="cave-in-wrath-before-collapse">
+      <title>Cave-In or Wrath before Collapse</title>
+      <rule>Check Crystal tiles first; remove from game; shuffle remaining removed tiles to bottom of Cave stack; reconnect map; place Dark tiles on open edges.</rule>
+    </subsection>
+    <subsection id="cave-in-wrath-during-collapse">
+      <title>Cave-In or Wrath during Collapse</title>
+      <rule>Remove tiles from game; do not fill open edges.</rule>
+    </subsection>
+    <rule>Tokens on removed tiles: return Bomb tokens to box; other tokens to owners. Crystal tokens removed during Collapse do not count toward victory conditions.</rule>
+  </section>
+
+  <section id="connecting-the-map">
+    <title>Connecting the map</title>
+    <rule>If removal splits the map, reconnect immediately, even before filling open edges.</rule>
+    <rule>Player who split the map selects one disconnected section and slides it in one cardinal direction until at least one tile edge touches the stationary section. Repeat for other sections; then fill open edges with Dark tiles as normal.</rule>
+  </section>
+
+  <section id="forced-movement">
+    <title>Forced movement</title>
+    <intro>When forced to move (tile removal, abilities), these guidelines apply:</intro>
+    <rule>Nothing can be moved onto open spaces.</rule>
+    <rule>Knight: cannot move through walls, onto Dark tiles, or spaces with other players. If entering space with Event token, must stop; next turn resolve Event before moving.</rule>
+    <rule>Goblin Tribes: cannot move through walls or onto spaces with other players. If forced, do not lose Population by leaving tiles.</rule>
+    <rule>Dragon underground: cannot be moved onto spaces with other players. If forced on surface: cannot move through walls, Dark tiles, or spaces with other players.</rule>
+    <rule>Thief: cannot move through walls or onto spaces with other players.</rule>
+    <rule>Treasure and Dragon Gems: cannot move through walls; may enter spaces with player pieces but cannot end movement on those spaces.</rule>
+    <rule>Crystal, Event, Bomb, Vault, Rockslide, Flamewall tokens cannot be moved.</rule>
+    <rule>If a piece cannot leave following guidelines when tile is removed, do not remove that tile. If tile would be removed by Collapse, remove next eligible tile instead.</rule>
+    <rule>Remover moves forced players; if multiple, one at a time in normal turn order (starting with Knight).</rule>
+  </section>
+
+  <section id="dragon-die">
+    <title>The Dragon die</title>
+    <rule>Center mark = roller’s current space; eight marks = surrounding spaces.</rule>
+    <rule>Apply effect to all white spaces on the die face. If effect requires center, any of three faces with center mark triggers.</rule>
+    <rule>Apply effect only to tiles present when roll was made.</rule>
+    <rule>Dragon die does not affect open spaces (no tiles), even if effect would place tiles elsewhere.</rule>
+  </section>
+
+  <section id="public-information">
+    <title>Public information</title>
+    <private>Knight Sidequest hand; Goblins Secrets hand; Dragon Power hand; Cave tiles in Cave hand; facedown/unrevealed pieces and decks; Lit undersides of Dark tiles.</private>
+    <rule>All other components are public.</rule>
+  </section>
+
+  <section id="component-limits">
+    <title>Component limits</title>
+    <rule>Components limited by included quantities. If you run out, do not use proxies.</rule>
+  </section>
+
+  <section id="rule-precedence">
+    <title>Rules disagreements</title>
+    <rule>Variant contradicts standard rules → follow variant.</rule>
+    <rule>Card or ability contradicts rulebook or variant → follow card or ability.</rule>
+  </section>
+
+  <section id="faq">
+    <title>FAQ</title>
+    <rule>For questions not in rulebook, boards, or cards: official FAQ at ledergames.com and boardgamegeek.com.</rule>
+  </section>
+
+  <glossary>
+    <title>Glossary</title>
+    <term name="Adjacent">Four spaces touching in cardinal directions; not diagonal.</term>
+    <term name="Impassable">Any space or piece blocking movement except when special exception allows (e.g. Knight Ancient Map, Thief Climb).</term>
+    <term name="The Map">Entire connected set of Cave and Terrain tiles in play. Excludes Cave hand, stack, box.</term>
+    <term name="Open Edge">Any edge without a wall on a Lit tile.</term>
+    <term name="Open Space">Square without a tile, on map or surrounding.</term>
+    <term name="Space">Any square equal in size to a Cave tile, with or without tile. Each Cave tile is one space; Terrain tiles (except Pits) may have multiple spaces.</term>
+    <term name="Surrounding">All eight spaces around a center (adjacent + diagonal).</term>
+    <term name="Unoccupied">Space with no player pieces or tokens.</term>
+    <term name="Visible">Straight line in cardinal direction not passing through walls, Dark tiles, or open spaces. Objects can be visible even if one or both on Dark tile.</term>
+  </glossary>
+</vast-rules>

@@ -1,0 +1,113 @@
+<KnowledgeGraph>
+  <Project NAME="hrf/vast" VERSION="0.2.0">
+    <keywords>vast, boardgame, digital adaptation, scalajs, browser game, rules engine, ai bot</keywords>
+    <annotation>Browser-playable digital adaptation of Vast: The Crystal Caverns focused on deterministic rules enforcement, replayable action/state transitions, and future AI bot strength.</annotation>
+
+    <M-VAST-META NAME="VastMeta" TYPE="ENTRY_POINT" STATUS="implemented">
+      <purpose>Declares the Vast game identity, supported factions, assets, action parsing/writing hooks, and bot selection surface.</purpose>
+      <path>vast/meta.scala</path>
+      <depends>M-VAST-GAME, M-VAST-SERIALIZE, M-VAST-BOT, M-VAST-UI</depends>
+      <verification-ref>V-M-VAST-META</verification-ref>
+      <annotations>
+        <export-Meta PURPOSE="Registers the Vast game in the shared HRF meta registry." />
+      </annotations>
+    </M-VAST-META>
+
+    <M-VAST-GAME NAME="VastGameLogic" TYPE="CORE_LOGIC" STATUS="implemented">
+      <purpose>Implements factions, board state, actions, hidden information, rule enforcement, and win-condition resolution for Vast.</purpose>
+      <path>vast/game.scala</path>
+      <depends>M-VAST-RULES</depends>
+      <verification-ref>V-M-VAST-GAME</verification-ref>
+      <annotations>
+        <type-Faction PURPOSE="Asymmetrical playable faction model." />
+        <type-Action PURPOSE="Rule-driven transition surface for the game engine." />
+      </annotations>
+    </M-VAST-GAME>
+
+    <M-VAST-UI NAME="VastBrowserUI" TYPE="UI_COMPONENT" STATUS="implemented">
+      <purpose>Renders the cave, tokens, factions, overlays, and interaction surface in the browser.</purpose>
+      <path>vast/ui.scala</path>
+      <depends>M-VAST-META, M-VAST-GAME, M-HRF-WEB-RUNTIME</depends>
+      <verification-ref>V-M-VAST-UI</verification-ref>
+      <annotations>
+        <export-UI PURPOSE="Browser UI implementation registered for Vast." />
+      </annotations>
+    </M-VAST-UI>
+
+    <M-VAST-SERIALIZE NAME="VastSerialization" TYPE="UTILITY" STATUS="implemented">
+      <purpose>Serializes and parses externalized Vast actions for replay, transport, and debugging.</purpose>
+      <path>vast/serialize.scala</path>
+      <depends>M-VAST-GAME</depends>
+      <verification-ref>V-M-VAST-SERIALIZE</verification-ref>
+      <annotations>
+        <export-Serialize PURPOSE="Stable write/parse surface for Vast actions." />
+      </annotations>
+    </M-VAST-SERIALIZE>
+
+    <M-VAST-BOT NAME="VastBots" TYPE="INTEGRATION" STATUS="partial">
+      <purpose>Provides heuristic and faction-specific bot decision logic and the main extension point for stronger AI play.</purpose>
+      <path>vast/bot.scala; vast/bot-knight.scala; vast/bot-dragon.scala</path>
+      <depends>M-VAST-GAME</depends>
+      <verification-ref>V-M-VAST-BOT</verification-ref>
+      <annotations>
+        <class-BotXX PURPOSE="Generic evaluation-based bot fallback for factions." />
+        <class-GameEvaluation PURPOSE="Action scoring surface that future stronger bots can replace or extend." />
+      </annotations>
+    </M-VAST-BOT>
+
+    <M-VAST-THIEF-SUPPORT NAME="VastThiefSupport" TYPE="CORE_LOGIC" STATUS="planned">
+      <purpose>Implement the Thief role as a supported fifth player across setup, rules logic, UI, serialization, and bot/simulation boundaries.</purpose>
+      <path>vast/game.scala; vast/meta.scala; vast/ui.scala; vast/serialize.scala; vast/bot.scala; vast/host.scala</path>
+      <depends>M-VAST-RULES, M-VAST-GAME, M-VAST-META, M-VAST-UI, M-VAST-SERIALIZE, M-VAST-BOT, M-VAST-HOST</depends>
+      <verification-ref>V-M-VAST-THIEF-SUPPORT</verification-ref>
+      <annotations>
+        <type-Thief PURPOSE="Planned fifth-player faction aligned with `rules/thief.xml`." />
+      </annotations>
+    </M-VAST-THIEF-SUPPORT>
+
+    <M-VAST-HOST NAME="VastHostSimulation" TYPE="INTEGRATION" STATUS="partial">
+      <purpose>Runs host-side automated or semi-automated simulations for bot play and serialization validation outside the browser UI.</purpose>
+      <path>vast/host.scala; host.scala; host.xsbt</path>
+      <depends>M-VAST-GAME, M-VAST-BOT, M-VAST-SERIALIZE</depends>
+      <verification-ref>V-M-VAST-HOST</verification-ref>
+      <annotations>
+        <export-Host PURPOSE="Simulation entry point for repeated bot-driven Vast runs." />
+      </annotations>
+    </M-VAST-HOST>
+
+    <M-VAST-RULES NAME="VastRulesCorpus" TYPE="DATA_LAYER" STATUS="implemented">
+      <purpose>Stores semantically structured XML rules used as the authoritative rules reference for gameplay verification and future AI grounding.</purpose>
+      <path>rules/index.xml; rules/general.xml; rules/knight.xml; rules/goblins.xml; rules/dragon.xml; rules/cave.xml; rules/thief.xml; rules/terrain-and-variants.xml</path>
+      <depends>none</depends>
+      <verification-ref>V-M-VAST-RULES</verification-ref>
+      <annotations>
+        <export-rules-index PURPOSE="Entry point describing rule documents and topic coverage." />
+      </annotations>
+    </M-VAST-RULES>
+
+    <M-HRF-WEB-RUNTIME NAME="HRFBrowserRuntime" TYPE="ENTRY_POINT" STATUS="implemented">
+      <purpose>Bootstraps the shared browser app, loads resources, selects game meta modules, and serves Vast through the shared HRF runtime.</purpose>
+      <path>hrf.scala; index.html; serve-local.ps1</path>
+      <depends>M-VAST-META, M-VAST-UI</depends>
+      <verification-ref>V-M-HRF-WEB-RUNTIME</verification-ref>
+      <annotations>
+        <export-HRF PURPOSE="Top-level browser runtime and resource bootstrap." />
+      </annotations>
+    </M-HRF-WEB-RUNTIME>
+
+    <CrossLink from="M-VAST-META" to="M-VAST-GAME" relation="creates game instances for" />
+    <CrossLink from="M-VAST-META" to="M-VAST-BOT" relation="selects bot implementations from" />
+    <CrossLink from="M-VAST-META" to="M-VAST-SERIALIZE" relation="delegates action parsing and writing to" />
+    <CrossLink from="M-VAST-UI" to="M-VAST-GAME" relation="renders and interacts with" />
+    <CrossLink from="M-VAST-SERIALIZE" to="M-VAST-GAME" relation="encodes and decodes action model from" />
+    <CrossLink from="M-VAST-BOT" to="M-VAST-GAME" relation="evaluates legal actions from" />
+    <CrossLink from="M-VAST-HOST" to="M-VAST-BOT" relation="uses bots to advance simulations" />
+    <CrossLink from="M-VAST-HOST" to="M-VAST-SERIALIZE" relation="checks replay stability through" />
+    <CrossLink from="M-VAST-GAME" to="M-VAST-RULES" relation="should remain aligned with" />
+    <CrossLink from="M-VAST-THIEF-SUPPORT" to="M-VAST-RULES" relation="must implement the semantics described in `rules/thief.xml`" />
+    <CrossLink from="M-VAST-THIEF-SUPPORT" to="M-VAST-GAME" relation="extends faction logic and setup constraints in" />
+    <CrossLink from="M-VAST-THIEF-SUPPORT" to="M-VAST-UI" relation="requires fifth-player rendering and interaction support in" />
+    <CrossLink from="M-VAST-THIEF-SUPPORT" to="M-VAST-BOT" relation="needs legal automated play support in" />
+    <CrossLink from="M-HRF-WEB-RUNTIME" to="M-VAST-META" relation="registers and launches" />
+  </Project>
+</KnowledgeGraph>
