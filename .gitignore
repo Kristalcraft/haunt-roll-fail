@@ -1,0 +1,17 @@
+# IDE and tooling
+.metals/
+.bloop/
+.vscode/
+.idea/
+
+# SBT / Scala build outputs
+**/target/
+**/project/target/
+**/project/project/
+
+# Local runtime/cache artifacts
+haunt-roll-fail/vast-assets-output.txt
+
+# Local-only downloaded assets (keep out of git history)
+haunt-roll-fail/vast/assets/
+haunt-roll-fail/webp2/
