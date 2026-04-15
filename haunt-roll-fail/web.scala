@@ -164,6 +164,14 @@ package object web {
     }
 
     def getElem(k : String) = dom.document.getElementById(k).asInstanceOf[html.Element]
+
+    /** `index.html` from the repo may omit some ids present in production (e.g. `lobby`). */
+    def elemTextById(k : String) : String =
+        dom.document.getElementById(k) match {
+            case null => ""
+            case e => e.textContent
+        }
+
     def getAsset(k : String) = dom.document.getElementById(k).asInstanceOf[html.Image]
 
     def fail(url : String) {

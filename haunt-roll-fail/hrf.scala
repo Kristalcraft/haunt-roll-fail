@@ -297,15 +297,15 @@ object HRFR {
     val loader = HRF.embedded.?(new WrappedEmbeddedImageLoader(s => "asset-" + s)).|(HRF.imageCache)
 
     def load(onLoad : Resources => Unit) {
-        if (HRF.replay) {
-            onLoad(Resources(ImageResources(Map(), Map(), HRF.imageCache), () => Map()))
+        if (HRF.flag("menu-assets")) {
+            loader.wait(HRF.embedded.?(original.images.sources.keys.$).|(original.images.sources.values.$)) {
+                val loaded = original.images.sources.$./((key, url) => key -> loader.get(HRF.embedded.?(key).|(url))).toMap
+
+                onLoad(Resources(ImageResources(loaded, original.images.sources, HRF.imageCache), () => Map()))
+            }
         }
         else
-        loader.wait(HRF.embedded.?(original.images.sources.keys.$).|(original.images.sources.values.$)) {
-            val loaded = original.images.sources.$./((key, url) => key -> loader.get(HRF.embedded.?(key).|(url))).toMap
-
-            onLoad(Resources(ImageResources(loaded, original.images.sources, HRF.imageCache), () => Map()))
-        }
+            onLoad(Resources(ImageResources(Map(), Map(), HRF.imageCache), () => Map()))
     }
 }
 
@@ -531,7 +531,7 @@ class HRFMetaUI(val ui : HRFUI, val meta : MetaGame, delayMainMenu : Int)(implic
 
         if (HRF.lobby.any || HRF.replay) {
             val (user, lj) = if (HRF.replay) {
-                ("", new ReplayPhantomJournal[String](meta, getElem("lobby").textContent, identity))
+                ("", new ReplayPhantomJournal[String](meta, elemTextById("lobby"), identity))
             }
             else {
                 val server = HRF.server.get
@@ -738,7 +738,7 @@ class HRFMetaUI(val ui : HRFUI, val meta : MetaGame, delayMainMenu : Int)(implic
 
                     val journal =
                         if (HRF.replay)
-                            new ReplayPhantomJournal[meta.gaming.ExternalAction](meta, getElem("replay").textContent, s => meta.parseActionExternal(s), HRF.paramInt("at") | 999999)
+                            new ReplayPhantomJournal[meta.gaming.ExternalAction](meta, elemTextById("replay"), s => meta.parseActionExternal(s), HRF.paramInt("at") | 999999)
                         else
                         if (HRF.flag("phantom"))
                             new ServerPhantomJournal[meta.gaming.ExternalAction](meta, HRF.server.get, HRF.user.get, HRF.secret.get, server.get, s => meta.parseActionExternal(s), s => meta.writeActionExternal(s), HRF.paramInt("at") | 999999)
