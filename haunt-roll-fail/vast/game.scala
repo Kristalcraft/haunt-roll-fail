@@ -4706,14 +4706,14 @@ class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame wit
 
                 val t = setup.of[Goblins.type].%(_.positions.has(p)).first
 
-                val tt = t.tribes.%(_.position.has(p)).first
+                val village = t.tribes.%(_.position.has(p)).first
 
                 val others = factions.but(t)./~(_.positions)
 
                 Bearings.wnes.foreach { dir =>
                     val dest = p.add(dir)
 
-                    + ForceMoveStepAction(f, t, dir, 1, 1, $(dest), CollapseTileAction(f, p, then, fail))
+                    + ForceMoveStepAction(f, village.tribe, dir, 1, 1, $(dest), CollapseTileAction(f, p, then, fail))
                         .!(board.get(dest).is[Emptiness.type])
                         .!(board.wall(p, dir))
                         .!(others.has(dest))
