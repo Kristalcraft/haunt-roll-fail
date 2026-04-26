@@ -31,6 +31,13 @@ case object Loading extends LoadResult[Nothing]
 case object Error extends LoadResult[Nothing]
 case class Done[T](result : T) extends LoadResult[T]
 
+/** Browsers have `window.caches`; Node / headless has neither — avoid touching DOM at loader construction. */
+private object CacheLoaders {
+    def tryOpenCache(id : String) =
+        try Some(dom.window.caches.toOption.get.open(id))
+        catch { case _ : Throwable => None }
+}
+
 abstract class Loader[T] {
     private var results = Map[String, LoadResult[T]]()
 
@@ -191,7 +198,7 @@ class WrappedEmbeddedImageLoader(url2id : String => String) extends Loader[Image
 }
 
 class CachedBlobImageLoader(id : String) extends Loader[ImageWrapper] {
-    val open = dom.window.caches.toOption.get.open(id)
+    private lazy val cacheOpen = CacheLoaders.tryOpenCache(id)
 
     var requests = 0
 
@@ -202,6 +209,10 @@ class CachedBlobImageLoader(id : String) extends Loader[ImageWrapper] {
     def process(url : String, tries : Int) {
         // println("process " + url + " (x" + tries + ")")
 
+        cacheOpen match {
+        case None =>
+            fail(url)
+        case Some(open) =>
         open.then { cache =>
             cache.`match`(url).then({ response =>
                 // println("cached response " + response)
@@ -243,11 +254,12 @@ class CachedBlobImageLoader(id : String) extends Loader[ImageWrapper] {
             })
             null
         }
+        }
     }
 }
 
 class CachedImageLoader(id : String) extends Loader[html.Image] {
-    val open = dom.window.caches.toOption.get.open(id)
+    private lazy val cacheOpen = CacheLoaders.tryOpenCache(id)
 
     var requests = 0
 
@@ -258,6 +270,10 @@ class CachedImageLoader(id : String) extends Loader[html.Image] {
     def process(url : String, tries : Int) {
         // println("process " + url + " (x" + tries + ")")
 
+        cacheOpen match {
+        case None =>
+            fail(url)
+        case Some(open) =>
         open.then { cache =>
             cache.`match`(url).then({ response =>
                 // println("cached response " + response)
@@ -302,12 +318,13 @@ class CachedImageLoader(id : String) extends Loader[html.Image] {
             })
             null
         }
+        }
     }
 }
 
 
 class CachedStringLoader(id : String) extends Loader[String] {
-    val open = dom.window.caches.toOption.get.open(id)
+    private lazy val cacheOpen = CacheLoaders.tryOpenCache(id)
 
     def process(url : String) {
         process(url, 0)
@@ -316,6 +333,10 @@ class CachedStringLoader(id : String) extends Loader[String] {
     def process(url : String, tries : Int) {
         // println("process " + url + " (x" + tries + ")")
 
+        cacheOpen match {
+        case None =>
+            fail(url)
+        case Some(open) =>
         open.then { cache =>
             cache.`match`(url).then({ response =>
                 // println("cached response " + response)
@@ -356,6 +377,7 @@ class CachedStringLoader(id : String) extends Loader[String] {
                 null
             })
             null
+        }
         }
     }
 }

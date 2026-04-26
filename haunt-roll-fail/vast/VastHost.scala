@@ -1,4 +1,4 @@
-// FILE: vast/host.scala
+// FILE: vast/VastHost.scala
 // VERSION: 0.1.0
 // START_MODULE_CONTRACT
 // PURPOSE: Run bot-driven Vast simulations and act as a host-side verification harness for action flow and serialization stability.
@@ -14,7 +14,7 @@
 // END_MODULE_MAP
 //
 // START_CHANGE_SUMMARY
-// LAST_CHANGE: v0.1.0 - Added initial GRACE contracts, semantic blocks, and stable log markers for host simulation flows.
+// LAST_CHANGE: Renamed from host.scala so JS build does not exclude this file (filter matched all host.scala).
 // END_CHANGE_SUMMARY
 package vast
 //
@@ -27,8 +27,6 @@ import hrf.logger._
 //
 //
 //
-
-import scala.collection.parallel.CollectionConverters._
 
 object Host {
     private def logMarker(scope : String, block : String, message : String) : Unit = {
@@ -82,7 +80,7 @@ object Host {
 
             case Ask(f : Knight.type, actions) =>
                 logMarker("askFaction", "BLOCK_SELECT_BOT_ACTION", "faction=" + f.short + " options=" + actions.num)
-                new BotKnight(f).ask(actions, 0)(g)
+                new BotKnight(f).ask(actions, 0)(g).immediate
 
             case Ask(f : Dragon.type, actions) =>
                 logMarker("askFaction", "BLOCK_SELECT_BOT_ACTION", "faction=" + f.short + " options=" + actions.num)
@@ -101,7 +99,7 @@ object Host {
     // SIDE_EFFECTS: runs simulations, writes failure files, emits verification log markers
     // LINKS: M-VAST-HOST, V-M-VAST-HOST, V-M-VAST-SERIALIZE
     // END_CONTRACT: main
-    def main(args:Array[String]) : Unit = {
+    def main(args : Array[String]) : Unit = {
         val allFactions : $[Faction] = $(Knight, Goblins, Dragon, Cave)
         val allComb = allFactions.combinations(4).$
         val factions = allFactions
@@ -127,7 +125,7 @@ object Host {
                     val game = new Game(seating, $)
 
                     var continue : Continue = StartContinue
-                    var a : Action = StartAction(dwam.version)
+                    var a : Action = StartAction(gaming.version)
 
                     var n = 0
                     while (a.is[GameOverAction].not) {
@@ -217,16 +215,11 @@ object Host {
                     case e : Throwable if false.not =>
                         error("[VastHost][simulate][BLOCK_SIMULATION_FAILURE] error=" + e)
                         println(e)
-
-                        import java.nio.file.{Paths, Files}
-                        import java.nio.charset.StandardCharsets
-
-                        Files.write(Paths.get("vast/game-error-" + System.currentTimeMillis + ".txt"), (
-                            aa./(_.unwrap)./(Serialize.write).mkString("\n") + "\n\n" +
-                            aa./(Serialize.write).mkString("\n") + "\n\n" +
-                            (e.getMessage + "\n" + e.getStackTrace.mkString("\n")) + "\n\n" +
-                            log.reverse.map("<div class='p'>" + _ + "</div>").mkString("\n")
-                        ).getBytes(StandardCharsets.UTF_8))
+                        println(aa./(_.unwrap)./(Serialize.write).mkString("\n"))
+                        println(aa./(Serialize.write).mkString("\n"))
+                        println(e.getMessage)
+                        e.printStackTrace()
+                        println(log.reverse.mkString("\n"))
                     Nil
                 }
             }

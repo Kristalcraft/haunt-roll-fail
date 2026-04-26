@@ -1,8 +1,12 @@
 enablePlugins(ScalaJSPlugin)
 
-Compile / mainClass := Some("hrf.HRF")
+// HRF_MAIN=hrf.VastSimEntry — симуляция Vast ботами (vast.Host.main), иначе браузерный клиент hrf.HRF
+val hrfMainClass = sys.env.get("HRF_MAIN").map(_.trim).filter(_.nonEmpty).getOrElse("hrf.HRF")
 
-unmanagedSources / excludeFilter := "reflect-jvm.scala" || "log-jvm.scala" || "host-jvm.scala" || "grey-jvm.scala" || "timeline-jvm.scala" || "host.scala" || "convert-images.scala" || "extract-logs.scala"
+Compile / mainClass := Some(hrfMainClass)
+
+// Имя host.scala отсекает все такие файлы (в т.ч. старый vast/host); симуляция Vast — в vast/VastHost.scala
+Compile / unmanagedSources / excludeFilter := "reflect-jvm.scala" || "log-jvm.scala" || "host-jvm.scala" || "grey-jvm.scala" || "timeline-jvm.scala" || "host.scala" || "convert-images.scala" || "extract-logs.scala"
 
 scalaJSUseMainModuleInitializer := true
 

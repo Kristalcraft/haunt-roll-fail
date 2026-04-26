@@ -10,7 +10,7 @@
         <file-3>vast/ui.scala</file-3>
         <file-4>vast/serialize.scala</file-4>
         <file-5>vast/bot.scala</file-5>
-        <file-6>vast/host.scala</file-6>
+        <file-6>vast/VastHost.scala</file-6>
       </write-scope>
       <contract-excerpt><![CDATA[
 M-VAST-THIEF-SUPPORT introduces Thief as a supported fifth-player faction and must keep four-player setups working.

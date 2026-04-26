@@ -162,7 +162,7 @@
         <source>vast/ui.scala</source>
         <source>vast/serialize.scala</source>
         <source>vast/bot.scala</source>
-        <source>vast/host.scala</source>
+        <source>vast/VastHost.scala</source>
       </target>
       <observability>
         <log-prefix>[VastThief]</log-prefix>
@@ -257,7 +257,7 @@
       </interface>
       <depends>M-VAST-GAME, M-VAST-BOT, M-VAST-SERIALIZE</depends>
       <target>
-        <source>vast/host.scala</source>
+        <source>vast/VastHost.scala</source>
         <source>host.scala</source>
         <source>host.xsbt</source>
       </target>

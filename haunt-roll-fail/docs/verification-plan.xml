@@ -102,7 +102,7 @@
     <V-M-VAST-SERIALIZE MODULE="M-VAST-SERIALIZE" PRIORITY="high">
       <test-files>
         <file>vast/serialize.scala</file>
-        <file>vast/host.scala</file>
+        <file>vast/VastHost.scala</file>
       </test-files>
       <module-checks>
         <check-1>Run host-side round-trip scenarios that write, parse, and compare external actions.</check-1>
@@ -191,7 +191,7 @@
 
     <V-M-VAST-HOST MODULE="M-VAST-HOST" PRIORITY="medium">
       <test-files>
-        <file>vast/host.scala</file>
+        <file>vast/VastHost.scala</file>
         <file>host.scala</file>
         <file>host.xsbt</file>
       </test-files>
@@ -244,7 +244,7 @@
         <file>vast/ui.scala</file>
         <file>vast/serialize.scala</file>
         <file>vast/bot.scala</file>
-        <file>vast/host.scala</file>
+        <file>vast/VastHost.scala</file>
       </test-files>
       <module-checks>
         <check-1>sbt compile</check-1>

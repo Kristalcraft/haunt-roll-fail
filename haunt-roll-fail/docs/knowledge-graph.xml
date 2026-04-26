@@ -57,7 +57,7 @@
 
     <M-VAST-THIEF-SUPPORT NAME="VastThiefSupport" TYPE="CORE_LOGIC" STATUS="planned">
       <purpose>Implement the Thief role as a supported fifth player across setup, rules logic, UI, serialization, and bot/simulation boundaries.</purpose>
-      <path>vast/game.scala; vast/meta.scala; vast/ui.scala; vast/serialize.scala; vast/bot.scala; vast/host.scala</path>
+      <path>vast/game.scala; vast/meta.scala; vast/ui.scala; vast/serialize.scala; vast/bot.scala; vast/VastHost.scala</path>
       <depends>M-VAST-RULES, M-VAST-GAME, M-VAST-META, M-VAST-UI, M-VAST-SERIALIZE, M-VAST-BOT, M-VAST-HOST</depends>
       <verification-ref>V-M-VAST-THIEF-SUPPORT</verification-ref>
       <annotations>
@@ -67,7 +67,7 @@
 
     <M-VAST-HOST NAME="VastHostSimulation" TYPE="INTEGRATION" STATUS="partial">
       <purpose>Runs host-side automated or semi-automated simulations for bot play and serialization validation outside the browser UI.</purpose>
-      <path>vast/host.scala; host.scala; host.xsbt</path>
+      <path>vast/VastHost.scala; host.scala; host.xsbt</path>
       <depends>M-VAST-GAME, M-VAST-BOT, M-VAST-SERIALIZE</depends>
       <verification-ref>V-M-VAST-HOST</verification-ref>
       <annotations>

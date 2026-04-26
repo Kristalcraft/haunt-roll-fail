@@ -40,18 +40,18 @@ object HRF {
 
     def uptime() : Int = (now().getTime() - startAt.getTime()).toInt
 
-    val defaultGlyph = getElem("icon").asInstanceOf[dom.html.Link].href
+    val defaultGlyph = try { getElem("icon").asInstanceOf[dom.html.Link].href } catch { case _ : Throwable => "" }
 
-    def glyph(s : String) = getElem("icon").asInstanceOf[dom.html.Link].href = s
+    def glyph(s : String) = try { getElem("icon").asInstanceOf[dom.html.Link].href = s } catch { case _ : Throwable => () }
 
     val imageCache = new CachedBlobImageLoader("hrf-image-cache-" + imageDataVersion)
     val stringCache = new CachedStringLoader("hrf-page-cache")
     val stringLoader = StringLoader
 
-    private val settings = getElem("settings").?
+    private val settings = try { getElem("settings").? } catch { case _ : Throwable => None }
 
-    def hash = dom.window.location.hash.drop(1)
-    val search = dom.window.location.search.drop(1)
+    def hash = try { dom.window.location.hash.drop(1) } catch { case _ : Throwable => "" }
+    def search = try { dom.window.location.search.drop(1) } catch { case _ : Throwable => "" }
 
     private def cookieParam(p : String) = web.getCookie("hrf-param-" + p)
     private def settingsParam(p : String) = settings./~(_.getAttribute("data-" + p).?).but("")
@@ -60,12 +60,16 @@ object HRF {
 
     private val params = mutable.Map[String, |[String]]()
 
-    dom.window.onhashchange = e => params.clear()
+    try { dom.window.onhashchange = e => params.clear() } catch { case _ : Throwable => () }
 
-    if (cookieParam("cache-html").any)
-        HRF.stringCache.queue(dom.window.location.origin + dom.window.location.pathname)
+    try {
+        if (cookieParam("cache-html").any)
+            HRF.stringCache.queue(dom.window.location.origin + dom.window.location.pathname)
+    } catch { case _ : Throwable => () }
 
-    def param(p : String) = params.getOrElseUpdate(p, hashParam(p) || urlParam(p) || cookieParam(p) || settingsParam(p))
+    def param(p : String) = try {
+        params.getOrElseUpdate(p, hashParam(p) || urlParam(p) || cookieParam(p) || settingsParam(p))
+    } catch { case _ : Throwable => None }
 
     def flag(p : String) = param(p).but("-").but("false").but("no").any
 
@@ -75,7 +79,7 @@ object HRF {
 
     val versionOverride = hashParam("version") || urlParam("version")
 
-    var segments = dom.window.location.pathname.split('/').$.drop(3)
+    var segments : $[String] = try { dom.window.location.pathname.split('/').$.drop(3) } catch { case _ : Throwable => Nil }
 
     var speed = paramInt("speed").|(640)
 
@@ -84,9 +88,11 @@ object HRF {
     var user = param("user")
     var secret = param("secret")
 
-    val offline = flag("offline") || dom.window.location.protocol == "file:"
+    val offline = try { flag("offline") || dom.window.location.protocol == "file:" } catch { case _ : Throwable => false }
 
-    var offsite = server.has(dom.window.location.origin).not.?(dom.window.location.origin + dom.window.location.pathname)
+    var offsite = try {
+        server.has(dom.window.location.origin).not.?(dom.window.location.origin + dom.window.location.pathname)
+    } catch { case _ : Throwable => None }
 
     val embedded = flag("embedded-assets")
     val replay = flag("replay")
@@ -110,8 +116,8 @@ object HRF {
 
     val metas = metaUIs.lefts
 
-    val html = dom.window.location.origin + "/play/"
-    val script = dom.document.getElementById("script").asInstanceOf[dom.html.Script].src
+    val html = try { dom.window.location.origin + "/play/" } catch { case _ : Throwable => "" }
+    val script = try { dom.document.getElementById("script").asInstanceOf[dom.html.Script].src } catch { case _ : Throwable => "" }
 
     var originalOuterHtml : String = ""
 
