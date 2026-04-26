@@ -14,7 +14,7 @@
 // END_MODULE_MAP
 //
 // START_CHANGE_SUMMARY
-// LAST_CHANGE: Renamed from host.scala so JS build does not exclude this file (filter matched all host.scala).
+// LAST_CHANGE: Optional VAST_SIM_SKIP_ROUNDTRIP / VAST_SIM_ITERATIONS (Node process.env) for bench and fast runs.
 // END_CHANGE_SUMMARY
 package vast
 //
@@ -28,7 +28,35 @@ import hrf.logger._
 //
 //
 
+import scalajs.js
+
 object Host {
+
+    private def envString(name : String) : |[String] = try {
+        val proc = js.Dynamic.global.selectDynamic("process")
+        if (js.isUndefined(proc) || proc == null)
+            None
+        else {
+            val env = proc.asInstanceOf[js.Dynamic].selectDynamic("env")
+            if (js.isUndefined(env) || env == null)
+                None
+            else {
+                val v = env.asInstanceOf[js.Dynamic].selectDynamic(name)
+                if (js.isUndefined(v) || v == null)
+                    None
+                else
+                    Some(v.toString.trim)
+            }
+        }
+    }
+    catch { case _ : Throwable => None }
+
+    private def envBoolean(name : String) : Boolean =
+        envString(name).exists(s => s.equalsIgnoreCase("1") || s.equalsIgnoreCase("true") || s.equalsIgnoreCase("yes"))
+
+    private def envInt(name : String, default : Int) : Int =
+        envString(name).flatMap(_.toIntOption).filter(_ >= 1).|(default).min(1000)
+
     private def logMarker(scope : String, block : String, message : String) : Unit = {
         +++("[VastHost][" + scope + "][" + block + "] " + message)
     }
@@ -110,8 +138,11 @@ object Host {
         val base = repeat
 
         // START_BLOCK_SIMULATE_GAME
+        val skipRoundTrip = envBoolean("VAST_SIM_SKIP_ROUNDTRIP")
+        val outerIterations = envInt("VAST_SIM_ITERATIONS", 20)
+        println("[VastHost][config] skipSerializeRoundTrip=" + skipRoundTrip + " outerIterations=" + outerIterations + " (set VAST_SIM_SKIP_ROUNDTRIP=1 / VAST_SIM_ITERATIONS=N in Node env)")
         logMarker("simulate", "BLOCK_SIMULATE_GAME", "factions=" + allFactions./(_.short).mkString(",") + " repetitions=" + repeat.size)
-        1.to(20).foreach { i =>
+        1.to(outerIterations).foreach { i =>
             results = results ++ base/*.par*/.map { ff =>
                 var log : $[String] = Nil
                 def writeLog(s : String) : Unit = {
@@ -135,62 +166,64 @@ object Host {
                         a match {
                             case a if a.isSoft =>
                             case a : ExternalAction =>
-                                try {
-                                    +++("[VastSerialize][roundTrip][BLOCK_WRITE_PARSE_ROUNDTRIP] action=" + a.getClass.getSimpleName)
-                                    val sss = Serialize.write(a.unwrap)
-                                    val ppp = Serialize.parseAction(sss)
-                                    val aaa = Serialize.write(ppp)
-
-                                    if (sss != aaa) {
-                                        println()
-                                        println("UNMATCHING WRITE/PARSE")
-                                        println()
-                                        println()
-                                        println()
-                                        println("soft:" + a.isSoft)
-                                        println(a)
-                                        println()
-                                        println(sss)
-                                        println()
-                                        println(ppp)
-                                        println()
-                                        println(aaa)
-                                        println()
-                                        println()
-                                        println()
-                                    }
-                                }
-                                catch {
-                                    case e =>
-                                        println()
-                                        println("*")
-                                        println("**")
-                                        println("*")
-                                        println()
-                                        println()
-                                        println()
-                                        println()
-                                        println()
-                                        println()
-                                        println()
-                                        println()
-                                        println()
-
-                                        println(a)
-
-                                        println()
-
-                                        val sss = Serialize.write(a)
-
-                                        println(sss)
-
+                                if (skipRoundTrip.not) {
+                                    try {
+                                        +++("[VastSerialize][roundTrip][BLOCK_WRITE_PARSE_ROUNDTRIP] action=" + a.getClass.getSimpleName)
+                                        val sss = Serialize.write(a.unwrap)
                                         val ppp = Serialize.parseAction(sss)
-
-                                        println(ppp)
-
                                         val aaa = Serialize.write(ppp)
 
-                                        println(aaa)
+                                        if (sss != aaa) {
+                                            println()
+                                            println("UNMATCHING WRITE/PARSE")
+                                            println()
+                                            println()
+                                            println()
+                                            println("soft:" + a.isSoft)
+                                            println(a)
+                                            println()
+                                            println(sss)
+                                            println()
+                                            println(ppp)
+                                            println()
+                                            println(aaa)
+                                            println()
+                                            println()
+                                            println()
+                                        }
+                                    }
+                                    catch {
+                                        case e =>
+                                            println()
+                                            println("*")
+                                            println("**")
+                                            println("*")
+                                            println()
+                                            println()
+                                            println()
+                                            println()
+                                            println()
+                                            println()
+                                            println()
+                                            println()
+                                            println()
+
+                                            println(a)
+
+                                            println()
+
+                                            val sss = Serialize.write(a)
+
+                                            println(sss)
+
+                                            val ppp = Serialize.parseAction(sss)
+
+                                            println(ppp)
+
+                                            val aaa = Serialize.write(ppp)
+
+                                            println(aaa)
+                                    }
                                 }
 
                             case _ =>

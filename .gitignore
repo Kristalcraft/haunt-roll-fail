@@ -8,6 +8,7 @@ good-game/project/metals.sbt
 # Local scratch / notes (not part of build)
 haunt-roll-fail/_runhost.txt
 haunt-roll-fail/vast-sim-run.log
+bench-sim-*.txt
 
 # SBT / Scala build outputs
 **/target/

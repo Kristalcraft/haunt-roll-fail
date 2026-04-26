@@ -130,6 +130,34 @@ tests/
   ... tests with GRACE-aware evidence where appropriate ...
 ```
 
+## Vast host simulation (Scala.js + Node)
+
+Batch bot simulations are driven by `vast.Host.main`, invoked from the Scala.js build via `hrf.VastSimEntry` (see `build.sbt` / `HRF_MAIN`).
+
+**Run (PowerShell, from `haunt-roll-fail/`):**
+
+```powershell
+$env:HRF_MAIN = 'hrf.VastSimEntry'
+sbt run
+```
+
+**Node `process.env` (read inside `vast/VastHost.scala` at startup):**
+
+| Variable | Meaning |
+|----------|---------|
+| `VAST_SIM_SKIP_ROUNDTRIP` | If `1`, `true`, or `yes`: **do not** run serialize **write → parse → write** on every `ExternalAction` (faster; use for routine runs). **Omit** or set `0` when validating serialization stability. |
+| `VAST_SIM_ITERATIONS` | Positive integer: outer loop count (each iteration runs 16 games). Default **20** (320 games total). Use a smaller value for quick smoke or benchmarks. |
+
+At startup the harness prints `[VastHost][config] skipSerializeRoundTrip=... outerIterations=...` so logs show which mode was active.
+
+**Typical fast run (no round-trip check):**
+
+```powershell
+$env:HRF_MAIN = 'hrf.VastSimEntry'
+$env:VAST_SIM_SKIP_ROUNDTRIP = '1'
+sbt run
+```
+
 ## Documentation Artifacts - Unique Tag Convention
 
 In `docs/*.xml`, repeated entities must use their unique ID as the XML tag name instead of a generic tag with an `ID` attribute. This reduces closing-tag ambiguity and gives LLMs stronger anchors.
