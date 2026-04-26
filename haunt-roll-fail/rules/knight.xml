@@ -51,6 +51,7 @@
 
     <revealing-tiles>
       <rule>Enter Dark tile: reveal (flip Lit), place, resolve. After resolve: gain 1 Grit.</rule>
+      <clarification source="Scrupulous Scholar 0.11">Event and Ambush effects from the revealed tile resolve before the Knight gains the 1 Grit and any Hero cube that Grit might unlock.</clarification>
       <rule>Place revealed tile connecting to tile moved from; if entered through open side, place open side of revealed tile against source. Cave adds Dark tiles on open sides (or you draw if no Cave).</rule>
       <tile-type name="Event">Cave plays Event card on you (or you draw if no Cave). Enter or start turn on tile with Event token: resolve as Event tile, remove token.</tile-type>
       <tile-type name="Ambush">May assign more Hero cubes to Strength immediately. Goblins may attack with hidden Tribe if Tribe Strength &gt; your Strength. If attack: lose 1 Health, Tribe scatters, Goblins Rage −1.</tile-type>
@@ -90,13 +91,19 @@
 
     <treasures name="Treasure effects (on collect)">
       <item name="Elven Sword">+1 Perception; +1 Strength during your turn.</item>
-      <item name="Enchanted Bow">Shoot Dragon or Thief up to 5 tiles straight line, even Dragon underground or Dark between. Before/during/after movement. No Encounter. Thief killed; Dragon discards Power cards = Strength − 1.</item>
-      <item name="Javelin">Next attack may target underground Dragon; +1 Strength on next attack. Cannot use Javelin same turn as Bomb underground attack. No Hero cube; costs Encounter to attack. Remove from game after use.</item>
+      <item name="Enchanted Bow">Shoot Dragon or Thief up to 5 tiles straight line, even Dragon underground or Dark/open spaces between. Before/during/after movement. No Encounter. Dragon discards Power cards = Strength − 1, max 3. Thief is killed only if Knight Perception &gt; Thief Stealth.</item>
+      <item name="Javelin">Next attack gains +1 Strength and may target the underground Dragon without Bomb or a visible player piece up to 3 spaces away. Cannot use Javelin same turn as Bomb underground attack. No Hero cube; costs Encounter to attack. Remove from game after use.</item>
       <item name="Heroic Boots">+4 Movement.</item>
       <item name="Mighty Axe">+1 Strength during turn. If attack Dragon succeeds and cube on Axe, may discard cube for extra −1 Health (2 total). Cannot use with Bomb underground.</item>
       <item name="Pixie Lantern">+1 Movement and +1 Perception.</item>
       <item name="Potion Kit">Remove from game + discard activating Hero cube → regain 2 Health.</item>
     </treasures>
+
+    <clarifications source="Scrupulous Scholar 0.11">
+      <treasures>When multiple Treasure or Dragon Gem tokens are on the Knight's tile, one Encounter can collect them all, but each token resolves separately, one at a time.</treasures>
+      <javelin>Throwing Javelin follows attack rules at range, so Sidequests, Rage, Unnatural Evasion, and other attack-triggered effects apply.</javelin>
+      <enchanted-bow>Enchanted Bow is not an attack for attack-triggered effects, even when it kills the Thief or forces Dragon discards.</enchanted-bow>
+    </clarifications>
 
     <equipment>
       <item name="Ancient Map">Move through walls; two touching tile edges with walls = one wall. Each cube = one wall. Does not change Movement costs.</item>

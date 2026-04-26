@@ -25,10 +25,18 @@
       <rule-assign>Place one Stat token each on Movement, Stealth, Thievery; Action cubes = Thievery value.</rule-assign>
     </statistics>
 
+    <treasure-shortage source="Scrupulous Scholar 0.11">If Thief ever needs to take a Treasure token from Cave supply and none are available, Thief may take one from anywhere on the map.</treasure-shortage>
+
     <movement-rules>
       <rule>Enter Lit and Dark; enter occupied tiles. Cannot cross walls or impassable terrain without Climb.</rule>
       <rule>Ended movement on Dark: may peek at tile and may reveal (orient as you choose). Ambush on reveal: Goblins do not attack you or Knight later.</rule>
-      <rule>Target each other player once per turn with actions. Target only if Stealth &gt; target Perception (see Interacting).</rule>
+      <rule>Target each other player once per turn with actions. Target only if Stealth &gt; target's relevant defense stat.</rule>
+      <target-stats source="Scrupulous Scholar 0.11">
+        <target role="Knight" stat="Perception" />
+        <target role="Goblin Tribe" stat="Perception" />
+        <target role="Dragon" stat="Armor" />
+        <target role="Cave" stat="always targetable by relevant Thief effects" />
+      </target-stats>
     </movement-rules>
 
     <action id="loot">
@@ -41,6 +49,8 @@
       <rule>Steal from player on your space. 1 cube: roll 4+; 2 cubes: 2+; 3 cubes: auto.</rule>
       <upgrade>Sticky Fingers: once per turn reroll Pickpocket.</upgrade>
       <success>Treasure from Cave; Knight Treasure card to bottom or random; Goblin Secrets card; Dragon Sloth Wakefulness→Greed.</success>
+      <clarification source="Scrupulous Scholar 0.11">If stealing a revealed item, Thief chooses it; otherwise choose randomly. Treasure Trove is an exception handled by its own card text.</clarification>
+      <clarification source="Scrupulous Scholar 0.11">Thief cannot target Knight if she has no Treasures, Goblins if they have no takeable Secrets, or Dragon if no Sloth cube can move from Wakefulness to Greed.</clarification>
     </action>
 
     <action id="pick-lock">
@@ -48,11 +58,13 @@
       <upgrade>Lock Picking Kit: −1 Action cube cost.</upgrade>
       <success>Remove Vault; Treasure from Cave supply.</success>
       <limit>Each Vault once per turn.</limit>
+      <clarification source="Scrupulous Scholar 0.11">A successful Pick Lock grants the Treasure immediately; Thief does not spend an additional Loot action on that newly opened Vault.</clarification>
     </action>
 
     <action id="climb">
       <rule>2 cubes: through wall. 3 cubes: impassable terrain, not ending on it.</rule>
       <upgrade>Climbing Gear: −1 cube.</upgrade>
+      <clarification source="Scrupulous Scholar 0.11">Climb changes what movement is legal, but it does not reduce the Movement cost of making that move.</clarification>
     </action>
 
     <action id="backstab">
@@ -61,13 +73,12 @@
       <injuries>
         <row target="Knight" light="-1 Grit" moderate="-3 Grit" heavy="-5 Grit"/>
         <row target="Goblins" light="-1 Pop" moderate="-2 Pop" heavy="-3 Pop"/>
-        <row target="Dragon" light="Discard 1 Power" moderate="2" heavy="3"/>
+        <row target="Dragon" light="Discard 1 Power card" moderate="Discard 2 Power cards" heavy="Discard 3 Power cards"/>
       </injuries>
     </action>
 
     <action id="hide-loot">
       <rule>X cubes: reduce Loot Drop Level by X.</rule>
-      <unnatural-evasion>First attack by another player each turn: roll Action die; 4+ attack fails and you may move 1 space.</unnatural-evasion>
     </action>
 
     <interacting-with-others>
@@ -91,6 +102,9 @@
       <rule>Enter Entrance: after effects, stash all.</rule>
       <rule>Stash Gem: return to Dragon; take Treasure from Cave to stash.</rule>
       <rule>Stash Treasure: place on upgrade space; Loot Drop Level to 3.</rule>
+      <rule>Stashed Treasure tokens cannot be lost.</rule>
+      <rule>Stash 6 Treasure tokens to win.</rule>
+      <clarification source="Scrupulous Scholar 0.11">Unstashed Dragon Gems still provide symbols for Dragon powers, and unstashed Treasures still count for Cave Omen collection.</clarification>
     </carrying-and-stashing>
 
     <dying>
@@ -104,6 +118,7 @@
       <rule>Cave Soporific Spores removes upgrade token but keeps stashed Treasure on board for victory.</rule>
       <stat-boosts>+1 Movement, Stealth, Thievery permanently (max 5).</stat-boosts>
       <flip-tokens>2→3, 3→4, ALL 4 upgrades.</flip-tokens>
+      <unnatural-evasion>First time each turn Thief is attacked by another player, roll Action die. On 4+, the attack fails and Thief may immediately move 1 space.</unnatural-evasion>
     </upgrades>
   </role>
 </vast-rules>

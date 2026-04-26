@@ -34,6 +34,8 @@
       <rule>Strength = Population + Strength discs (Fangs has permanent +1).</rule>
       <rule>Perception = Population + 1.</rule>
       <rule>Max 4 Population per Tribe; overpopulation rules apply.</rule>
+      <clarification source="Scrupulous Scholar 0.11">Strength discs never change Population, do not prevent disc placement, and do not cause overpopulation. The Fangs Strength disc cannot be lost or discarded.</clarification>
+      <clarification source="Scrupulous Scholar 0.11">The included Strength discs are a component limit. If all are in use, a card that needs a Strength disc has no effect until one becomes available.</clarification>
     </statistics>
 
     <rage-and-malaise>
@@ -41,6 +43,8 @@
       <decrease>When Tribe successfully attacks another player; smash Crystal; spend to prevent overpopulation.</decrease>
       <malaise>Rage 0: −1 Strength all Tribes until Rage ≥ 1.</malaise>
       <bounds>Rage 0–3.</bounds>
+      <clarification source="Scrupulous Scholar 0.11">A Tribe may still attack at Rage 0, applying the Malaise Strength penalty. Rage cannot decrease below 0.</clarification>
+      <clarification source="Scrupulous Scholar 0.11">Spending Rage to avoid placing Population discs requires having at least 1 Rage.</clarification>
     </rage-and-malaise>
 
     <phase id="war-card">
@@ -66,6 +70,7 @@
     <phase id="activate-tribes">
       <rule>Each Tribe once per turn; any order; finish one before next.</rule>
       <movement>Any number of tiles; Lit and Dark; not through walls. −1 Population per 2 Lit tiles exited same turn (remove disc on second).</movement>
+      <clarification source="Scrupulous Scholar 0.11">A Tribe can pass through the same Lit tile multiple times, but only the first exit from that Lit tile counts toward Population loss for that turn.</clarification>
       <actions>After movement: one action — Attack, Plunder, Explore, Special, Reveal, Hide. Tribe on board cannot move. 0 Population: no actions. Revealed Tribes only for most actions except Reveal/Hide as stated.</actions>
     </phase>
 
@@ -75,6 +80,8 @@
       <thief>Always enter. Perception &gt; Thief Stealth to attack; Thief killed; Rage −1; Tribe does not scatter; draw Secrets or gain Rage per Loot Drop.</thief>
       <dragon>Strength &gt; Dragon Armor to enter; attack resolves per Goblins rules with Ash Dragon if applicable.</dragon>
       <crystal>Two Tribes each Strength ≥ 3; each uses Attack on Crystal before turn ends. Smash: give Crystal to Knight (or keep on board if no Knight); both Tribes scatter; Rage −1.</crystal>
+      <clarification source="Scrupulous Scholar 0.11">If a combined Crystal attack cannot succeed, neither part of the attack happens: no Rage is lost and neither Tribe scatters for that failed attempt.</clarification>
+      <disputed source="Scrupulous Scholar 0.11">When entering a tile with multiple opposing pieces, Scholar states the Goblins must be strong enough to overcome the relevant defenses to enter. Treat this as a check against every opposing piece that would block entry unless a scenario-specific rule says otherwise.</disputed>
     </action>
 
     <action id="plunder">
@@ -88,7 +95,9 @@
 
     <action id="reveal">
       <rule>Move hidden Tribe from board to Dark tile with Tribe symbol; or open space adjacent to any tile (lurking).</rule>
+      <clarification source="Scrupulous Scholar 0.11">A Tribe cannot Reveal on a tile with another player's piece, even if that piece would not prompt an attack. A Tribe may Reveal on a tile with another Tribe or a Treasure token. A Tribe with 0 Population cannot Reveal.</clarification>
       <lurking>Still hidden. Later: move to adjacent tile only OR Hide; no action after lurk move. Tile placed under lurking Tribe → revealed.</lurking>
+      <clarification source="Scrupulous Scholar 0.11">A lurking Tribe remains hidden and cannot be directly attacked, but it may attack when the Knight encounters an Ambush.</clarification>
     </action>
 
     <action id="hide">

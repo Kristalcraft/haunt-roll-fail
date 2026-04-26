@@ -106,6 +106,7 @@
     </thief>
     <variants>
       <rule>No Cave player: each places 1 Dark end of turn; Collapse removes 3 each.</rule>
+      <clarification source="Scrupulous Scholar 0.11">With Crowded House in a no-Cave game of 4 or more players, Collapse removes only 1 tile at end of turn.</clarification>
       <rule>Solo: Alone in the Dark replaces normal tile place/remove, not in addition.</rule>
     </variants>
   </section>

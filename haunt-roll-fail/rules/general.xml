@@ -71,10 +71,22 @@
     <rule>When all Cave tiles are placed, Collapse begins at the start of the next player’s turn.</rule>
     <rule>During Collapse: do not fill open edges on revealed tiles.</rule>
     <rule>During Cave’s Shape the Cave phase: instead of adding a tile, Cave removes 3 tiles from the map. If no Cave player, each player removes 3 tiles at end of their turn.</rule>
+    <clarification source="Scrupulous Scholar 0.11">If a no-Cave game uses the Crowded House rules with 4 or more players, the current player removes only 1 tile at end of turn during Collapse.</clarification>
     <rule>When removing tiles for Collapse: first tiles touching only one tile, then tiles touching only two. If multiple eligible, remover chooses. If a revealed Crystal tile can be removed, it must be removed first. If Dark tile removed, reveal it to check for Crystal.</rule>
     <rule>If 5 Crystal tiles have been removed, game ends: Cave wins. If no Cave player, all players lose.</rule>
     <rule>Entrance tile can never be removed. Return tokens on removed tiles to owners; forced movement for pieces on removed tiles.</rule>
     <rule>Tiles can also be removed by Goblins’ Cave-In Secrets and Dragon’s Wrath.</rule>
+    <subsection id="almost-collapse">
+      <title>Almost Collapse phase</title>
+      <clarification source="Scrupulous Scholar 0.11">Between placing the last Cave tile and the start of the next player’s turn, Collapse has not begun yet. With no Cave player, tiles are neither added nor removed at the end of that turn.</clarification>
+      <clarification source="Scrupulous Scholar 0.11">If Cave-In, Wrath, or similar effects remove non-Crystal tiles during this interval, those tiles return to the stack normally and must be placed again before Collapse is triggered.</clarification>
+    </subsection>
+    <subsection id="collapse-like-effects">
+      <title>Collapse-like effects</title>
+      <clarification source="Scrupulous Scholar 0.11">Directed effects such as Cave-In cannot collapse tiles containing other players or Crystal tokens unless the effect explicitly says otherwise. Random effects such as Wrath can affect occupied tiles, and affected player pieces use Forced Movement.</clarification>
+      <clarification source="Scrupulous Scholar 0.11">Before Collapse, collapsed Crystal tiles, including Dark Crystal tiles found by inspection, are removed from the game and count toward Cave victory. Other collapsed tiles are shuffled to the bottom of the Cave stack.</clarification>
+      <clarification source="Scrupulous Scholar 0.11">During Collapse, all collapsed tiles are removed from the game and Crystal tiles count toward Cave victory; open edges remain open.</clarification>
+    </subsection>
     <subsection id="cave-in-wrath-before-collapse">
       <title>Cave-In or Wrath before Collapse</title>
       <rule>Check Crystal tiles first; remove from game; shuffle remaining removed tiles to bottom of Cave stack; reconnect map; place Dark tiles on open edges.</rule>
@@ -104,6 +116,16 @@
     <rule>Crystal, Event, Bomb, Vault, Rockslide, Flamewall tokens cannot be moved.</rule>
     <rule>If a piece cannot leave following guidelines when tile is removed, do not remove that tile. If tile would be removed by Collapse, remove next eligible tile instead.</rule>
     <rule>Remover moves forced players; if multiple, one at a time in normal turn order (starting with Knight).</rule>
+    <clarification source="Scrupulous Scholar 0.11">When a piece is forced to leave a removed tile, move it the shortest possible distance to a legal space. If multiple destinations tie, the player removing the tile chooses.</clarification>
+    <clarification source="Scrupulous Scholar 0.11">Effects caused by entering spaces, such as Terrain or Flame Wall effects, still apply during forced movement.</clarification>
+    <clarification source="Scrupulous Scholar 0.11">If the Knight is forced onto an Event token and later forced away before her turn, she does not resolve that Event on her turn.</clarification>
+  </section>
+
+  <section id="attacks">
+    <title>Attacks</title>
+    <rule>The following are attacks: Knight Encountering an opposing player or Crystal; Goblins using Attack, including Hiding Spots; Goblins attacking via Ambush; Dragon using Claw or Scratch; Thief using Pickpocket or Backstab, including Hand Crossbow.</rule>
+    <rule>The following are not attacks: taking Treasure or Dragon Gems from the map; Knight using Bow or Enchanted Bow; Goblins using Hex or Cave-In; Dragon using Hiss, Slap, Flame Wall, or Wrath; entering Flame Wall; harm from trapped Dragon Gems; Cave using Soporific Spores or Giant Bats.</rule>
+    <clarification source="Scrupulous Scholar 0.11">This distinction matters for effects such as Sidequests, Rage, Trap, and Unnatural Evasion.</clarification>
   </section>
 
   <section id="dragon-die">
@@ -116,7 +138,7 @@
 
   <section id="public-information">
     <title>Public information</title>
-    <private>Knight Sidequest hand; Goblins Secrets hand; Dragon Power hand; Cave tiles in Cave hand; facedown/unrevealed pieces and decks; Lit undersides of Dark tiles.</private>
+    <private>Knight Sidequest hand; Goblins Secrets hand; Dragon Power hand; Cave tiles in Cave hand; Thief upgrade bonus cards; facedown/unrevealed pieces and decks; Lit undersides of Dark tiles.</private>
     <rule>All other components are public.</rule>
   </section>
 

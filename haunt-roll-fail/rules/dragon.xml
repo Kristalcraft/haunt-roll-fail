@@ -42,6 +42,16 @@
       <movement-surface>Cannot enter Dark or through walls. Entering Knight or Goblin: attack only if their Strength allows attack (Goblin &gt; Armor; Knight ≥ Armor).</movement-surface>
     </phase>
 
+    <revealing-tiles>
+      <clarification source="Scrupulous Scholar 0.11">When Dragon powers reveal multiple Dark tiles, Dragon chooses the reveal order and orients each tile to form an unbroken path to the Entrance if possible.</clarification>
+      <clarification source="Scrupulous Scholar 0.11">After Dragon finishes revealing tiles, Cave fills all open sides with Dark tiles unless Collapse has begun.</clarification>
+      <tile-type name="Event">If Dragon reveals an Event tile, Cave places an Event token on it. Knight must spend an Encounter if she later enters it.</tile-type>
+      <tile-type name="Ambush">If Dragon reveals an Ambush tile, Goblins do not attack Dragon and do not attack Knight if she later enters it.</tile-type>
+      <tile-type name="Treasure Room">Place a Treasure token.</tile-type>
+      <tile-type name="Crystal">Place a Crystal token.</tile-type>
+      <tile-type name="Vault">Place a Vault token.</tile-type>
+    </revealing-tiles>
+
     <killing-goblins>
       <rule>Claw, Scratch, Hiss vs Goblins: increase Eaten Goblins by total Population lost.</rule>
     </killing-goblins>
@@ -93,12 +103,17 @@
       <power name="Slap">Move Knight from adjacent up to 3 spaces.</power>
       <power name="Shriek">Place Shriek token; when rolling Dragon die may spend to reroll.</power>
       <power name="Scratch">Attack Knight, all Goblin Tribes, or Thief on tile: Knight −5 Grit; Goblins to 0 Population and eat; Thief killed.</power>
-      <power name="Flame Wall">Adjacent visible tile; entering: Knight −5 Grit; Goblin −1 Population; Thief killed; Dragon immune. Return token start of next turn.</power>
+      <power name="Flame Wall">Adjacent visible tile; first time the tile is entered in a turn: Knight −5 Grit; Goblin −1 Population; Thief killed; Dragon immune. Return token start of next turn.</power>
       <power name="Smash">Smash Crystal on your tile.</power>
       <power name="Wrath">Roll die; Collapse tile; scatter Goblins; move others adjacent; reconnect if split.</power>
     </powers-summary>
 
     <note>Full costs printed on Dragon board (Armor | Spirit pairs per row).</note>
     <note>While surfaced or during Collapse, Knight can attack without Bomb; multiple attacks per turn on surface.</note>
+    <clarifications source="Scrupulous Scholar 0.11">
+      <flame-wall>There can be only one Flame Wall token because of component limits, but Dragon can use Flame Wall again in the same turn on a different space, allowing targets to be affected again.</flame-wall>
+      <thief-gem>If Thief takes a Dragon Gem and is killed before stashing it, place the Gem on the tile where he was killed. Until it is stashed, Dragon can still use that Gem's symbol for powers.</thief-gem>
+      <attacks>Claw and Scratch are attacks. Hiss, Slap, Flame Wall, and Wrath are not attacks for attack-triggered effects.</attacks>
+    </clarifications>
   </role>
 </vast-rules>

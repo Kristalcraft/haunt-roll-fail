@@ -30,6 +30,7 @@
 
     <phase id="collect-omens">
       <table>Count Treasure tokens + Crystal tokens on map → Omen tokens: 0→1, 1→2, 2–3→3, 4–6→4, 7–10→5, 11+→6</table>
+      <clarification source="Scrupulous Scholar 0.11">Include unstashed Treasures carried by the Thief, but not Treasures held by other players, when counting Treasure tokens for Omen collection.</clarification>
       <using-omens>Discard Omen tokens to bag equal to cost. Any combination of symbols shown. Any number of times per turn. Unused save.</using-omens>
       <hatred-past-plunder>Three costs left→right: first, second, third use same turn; further uses cost highest.</hatred-past-plunder>
     </phase>
@@ -45,12 +46,12 @@
     </phase>
 
     <omens>
-      <omen name="Giant Bats">Cost 1 Omen. Move Knight, Gem, Treasure, Goblin, or Thief up to 3 spaces (per rules).</omen>
+      <omen name="Giant Bats">Cost 1 Omen. Move Treasure token, Dragon Gem, Knight, or Goblin Tribe up to 3 spaces (per forced movement rules).</omen>
       <omen name="Past Plunder">Cost 1/2/3 Omen.</omen>
       <omen name="Rockslide">Cost 2 Omen. Wall between two adjacent tiles without walls; or move if all 3 placed.</omen>
-      <omen name="Soporific Spores">Cost 3 Omen. Target: Knight −5 Grit; Goblins Tribe to 1 Pop; Dragon Sloth Wakefulness→Sloth; Thief loses upgrade.</omen>
-      <omen name="Hatred">Cost 1/2/3 Omen.</omen>
-      <omen name="Crystal Curse">Cost 1 Omen. Place tile / during Collapse remove tile / rotate / Event token / move top 3 Event to bottom.</omen>
+      <omen name="Soporific Spores">Cost 3 Omen. Target: Knight −5 Grit; Goblins Tribe to 1 Pop; Dragon Sloth Wakefulness→Sloth; Thief loses upgrade. Target chooses affected token, Tribe, Sloth cube, or upgrade when relevant.</omen>
+      <omen name="Hatred">Cost 1/2/3 Omen. Place a Cave tile; during Collapse, remove a tile instead.</omen>
+      <omen name="Crystal Curse">Cost 1 Omen. Rotate a tile / place Event token on Event tile without one / move top 3 Event cards to bottom.</omen>
     </omens>
 
     <treasures-to-knight>
@@ -67,8 +68,20 @@
       <rule>May examine top 3 Event cards anytime.</rule>
     </events>
 
+    <rockslides>
+      <rule>Rockslide tokens are walls placed on the border of two adjacent Cave tiles. If all three Rockslide tokens are placed, Cave may move one instead.</rule>
+      <clarification source="Scrupulous Scholar 0.11">If either tile sharing a Rockslide edge is collapsed, rotated, or removed, return that Rockslide token to the Cave supply.</clarification>
+    </rockslides>
+
     <collapse-other-causes>
       <rule>Wrath and Cave-In: before Collapse — Crystal tiles count toward victory, other tiles to bottom of stack, reconnect, fill edges. During Collapse — removed from game, Crystals count.</rule>
     </collapse-other-causes>
+
+    <clarifications source="Scrupulous Scholar 0.11">
+      <omen name="Giant Bats">Targets a Treasure token, Dragon Gem, Knight, or Goblin Tribe and moves it up to 3 spaces. It does not directly target Thief or Dragon pieces.</omen>
+      <omen name="Soporific Spores">The target player chooses the affected token, Tribe, Sloth cube, or upgrade when a choice is needed.</omen>
+      <omen name="Hatred">Places a Cave tile. During Collapse, removes a tile instead.</omen>
+      <omen name="Crystal Curse">Rotates a tile, places an Event token on an Event tile without one, or moves the top 3 Event cards to the bottom of the Event deck. It does not place or remove Cave tiles; that belongs to Hatred.</omen>
+    </clarifications>
   </role>
 </vast-rules>
