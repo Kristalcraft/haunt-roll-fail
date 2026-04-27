@@ -83,6 +83,8 @@
         <file>vast/game-setup.scala</file>
         <file>vast/game-goblins.scala</file>
         <file>vast/game-dragon.scala</file>
+        <file>vast/game-cave-tail.scala</file>
+        <file>vast/game-board-tail.scala</file>
       </test-files>
       <module-checks>
         <check-1>sbt compile</check-1>

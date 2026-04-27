@@ -59,6 +59,8 @@
         <source>vast/game-setup.scala</source>
         <source>vast/game-goblins.scala</source>
         <source>vast/game-dragon.scala</source>
+        <source>vast/game-cave-tail.scala</source>
+        <source>vast/game-board-tail.scala</source>
       </target>
       <observability>
         <log-prefix>[VastGame]</log-prefix>
@@ -187,6 +189,7 @@
         <checkpoint-2026-04-28-wave3>Refactor wave 3 split `performInternalPart2` at the Dragon section: Goblins-only arms stay in part 2; Dragon through `SelfPerform` move to `performInternalPart3` in `vast/game.scala` (bytecode / maintainability, behavior-preserving).</checkpoint-2026-04-28-wave3>
         <checkpoint-2026-04-28-wave4>Wave 4 moves Dragon `PartialFunction` dispatch from `caveTailPart3`/`performInternalPart3` into `vast/game-dragon.scala` as `GameDragonSupport#dragonDispatchPart3`; `caveTailPart3` retains Cave, Thief hooks, and board helpers. Call sites pass implicit `Game` for `GameImplicits` faction→player enrichment.</checkpoint-2026-04-28-wave4>
         <checkpoint-2026-04-28-wave5>Wave 5 moves Goblins arms from inline `performInternalPart2` into `vast/game-goblins.scala` as `GameGoblinsSupport#goblinDispatchPart2`; `performInternalPart2` delegates via `lift` then `performInternalPart3`. Behavior-preserving; verify `sbt compile`, `fastOptJS`, optional Vast sim.</checkpoint-2026-04-28-wave5>
+        <checkpoint-2026-04-28-wave6>Wave 6 splits `caveTailPart3` into `GameCaveTailSupport#caveTailCaveDispatchPart3` + `GameThiefSupport#thiefCaveTailDispatchPart3` + `GameBoardTailSupport#boardTailDispatchPart3` (`orElse` chain). `EndPlayerTurnAction` uses `factions =` (not `private implicit game` from traits). Files: `vast/game-cave-tail.scala`, `vast/game-board-tail.scala`, `vast/game-thief.scala`.</checkpoint-2026-04-28-wave6>
       </notes>
     </M-VAST-THIEF-SUPPORT>
 

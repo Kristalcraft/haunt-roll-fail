@@ -1,5 +1,5 @@
 // FILE: vast/game-thief.scala
-// VERSION: 0.1.0
+// VERSION: 0.1.1
 // START_MODULE_CONTRACT
 // PURPOSE: Isolate the partial Thief/5p runtime support from the monolithic Vast action dispatcher.
 // SCOPE: Own Thief setup helpers, basic turn flow, movement, Loot/Pick Lock, carried/stashed loot, and Thief verification markers.
@@ -14,7 +14,7 @@
 // END_MODULE_MAP
 //
 // START_CHANGE_SUMMARY
-// LAST_CHANGE: v0.1.0 - Extracted Thief helpers from Game to keep new Thief behavior out of performInternal.
+// LAST_CHANGE: v0.1.1 - `thiefCaveTailDispatchPart3` bridges Thief cases in `Game.caveTailPart3` chain (Cave→Thief→Board PFs). v0.1.0 extracted Thief helpers from Game.
 // END_CHANGE_SUMMARY
 package vast
 
@@ -215,5 +215,18 @@ trait GameThiefSupport { self : Game =>
         case ThiefPickLockRollAction(f, cubes, x) => resolveThiefPickLockRoll(f, cubes, x)
         case _ => ThiefTurnAction(Thief)
     }
+
+    protected def thiefCaveTailDispatchPart3(soft : Void)(implicit g : Game) : PartialFunction[Action, Continue] = {
+            case ContinuePlayerTurnAction(f : Thief.type) =>
+                startThiefTurn(f)
+
+            case ThiefTurnAction(f) =>
+                thiefTurn(f)
+
+            case a : ThiefAction =>
+                performThief(a)
+
+    }
+
     // END_BLOCK_THIEF_SUPPORT_CHECKPOINT
 }
