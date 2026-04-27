@@ -1,7 +1,8 @@
 enablePlugins(ScalaJSPlugin)
 
-// HRF_MAIN=hrf.VastSimEntry — симуляция Vast ботами (vast.Host.main), иначе браузерный клиент hrf.HRF
-val hrfMainClass = sys.env.get("HRF_MAIN").map(_.trim).filter(_.nonEmpty).getOrElse("hrf.HRF")
+// Браузер: всегда hrf.HRF. Симуляция Vast (vast.Host, Node/отладка): HRF_VAST_SIM=1 при sbt.
+// Не используем HRF_MAIN: в PowerShell/Windows он часто остаётся в сессии после node-симов и портит следующий fastOpt (в браузере вместо меню — боты).
+val hrfMainClass = sys.env.get("HRF_VAST_SIM").map(_.trim.toLowerCase).filter(v => v == "1" || v == "true" || v == "yes").map(_ => "hrf.VastSimEntry").getOrElse("hrf.HRF")
 
 Compile / mainClass := Some(hrfMainClass)
 

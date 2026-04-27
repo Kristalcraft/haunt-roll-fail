@@ -1,5 +1,5 @@
 // FILE: vast/game.scala
-// VERSION: 0.1.0
+// VERSION: 0.1.3
 // START_MODULE_CONTRACT
 // PURPOSE: Implement the authoritative Vast game state machine, including setup, action resolution, state validation, and game progression.
 // SCOPE: Own runtime state, apply Actions to produce Continue values, maintain board/faction invariants, and emit player-facing logs.
@@ -14,7 +14,7 @@
 // END_MODULE_MAP
 //
 // START_CHANGE_SUMMARY
-// LAST_CHANGE: v0.1.0 - Added initial GRACE contracts, semantic blocks, and stable log markers around core action execution.
+// LAST_CHANGE: v0.1.3 - Split `performInternal` into `performInternal` + `performInternalPart2` at the Goblins section so neither JVM method holds the full match (frees bytecode headroom; behavior unchanged). Wave 1: game-setup / game-thief traits.
 // END_CHANGE_SUMMARY
 package vast
 //
@@ -174,12 +174,12 @@ object Tiles {
    $
 
     val vaults =
-        HiddenTile(Tile(Walls.Corner , "empty-corner-4" ), Fangs, $(Vault)) ::
-        HiddenTile(Tile(Walls.Corner , "empty-corner-4" ), Bones, $(Vault)) ::
-        HiddenTile(Tile(Walls.Side   , "empty-side-8"   ), Eye  , $(Vault)) ::
-        HiddenTile(Tile(Walls.Corner , "empty-corner-4" ), Fangs, $(Vault)) ::
-        HiddenTile(Tile(Walls.Side   , "empty-side-9"   ), Bones, $(Vault)) ::
-        HiddenTile(Tile(Walls.Side   , "empty-side-a"   ), Eye  , $(Vault)) ::
+        HiddenTile(Tile(Walls.Corner , "vault-corner-4" ), Fangs, $(Vault)) ::
+        HiddenTile(Tile(Walls.Corner , "vault-corner-4" ), Bones, $(Vault)) ::
+        HiddenTile(Tile(Walls.Side   , "vault-side-8"   ), Eye  , $(Vault)) ::
+        HiddenTile(Tile(Walls.Corner , "vault-corner-4" ), Fangs, $(Vault)) ::
+        HiddenTile(Tile(Walls.Side   , "vault-side-9"   ), Bones, $(Vault)) ::
+        HiddenTile(Tile(Walls.Side   , "vault-side-a"   ), Eye  , $(Vault)) ::
     $
 
     val crystals =
@@ -1107,6 +1107,24 @@ class CavePlayer(val game : Game, val faction : Cave.type) extends Player {
     var omens : $[OmenCard] = $
 }
 
+class ThiefPlayer(val game : Game, val faction : Thief.type) extends Player {
+    var position = Relative(0, 0)
+    var statsAssigned = false
+    var movement = 0
+    var stealth = 0
+    var thievery = 0
+    var actionCubes = 0
+    var lootDrop = 3
+    var carried : $[Token] = $
+    var stashed = 0
+    var path : $[Relative] = $
+    var targeted : $[Faction] = $
+
+    def moves = path.num
+    def effectiveStealth = max(0, stealth - carried.num)
+    def positions = $(position)
+}
+
 
 trait TileKey extends Key { self : Action =>
     val position : Relative
@@ -1153,6 +1171,7 @@ case object InitDoneAction extends ForcedAction
 case class StartPlayerTurnAction(f : Faction) extends ForcedAction
 case class ContinuePlayerTurnAction(f : Faction) extends ForcedAction
 case class KnightTurnAction(f : Knight.type) extends ForcedAction
+case class ThiefTurnAction(f : Thief.type) extends ForcedAction
 case class CompleteActionTurnAction(f : Faction) extends ForcedAction
 case class EndPlayerTurnAction(f : Faction) extends ForcedAction
 
@@ -1168,6 +1187,18 @@ case class ShowOpenEdgesAction(f : Faction, then : ForcedAction) extends ForcedA
 case class FillOpenEdgesAction(f : Faction, l : $[Relative], then : ForcedAction) extends ForcedAction
 case class PlaceHiddenTileAction(f : Faction, position : Relative, t : HiddenTile, then : ForcedAction) extends ForcedAction with TileKey
 case class HideOpenEdgesAction(then : ForcedAction) extends ForcedAction
+
+trait ThiefAction { self : Action => }
+case class ThiefAssignStatsAction(self : Thief.type, movement : Int, stealth : Int, thievery : Int) extends BaseAction("Assign stat tokens".styled(self))("Move", movement.hl, "Stealth", stealth.hl, "Thievery", thievery.hl) with ThiefAction
+case class ThiefMoveAction(self : Thief.type, direction : Bearing, dark : Boolean) extends BaseAction("Move".styled(self))("Move", direction.elem ~ (direction.dy == 0).?(" ".txt) ~ Image("move-deg-" + direction.rotation * 90, styles.token, ""), dark.?("Dark".hl)) with MoveAction with ThiefAction
+case class ThiefKeepDarkAction(self : Thief.type) extends BaseAction("Dark tile".styled(self))("Keep hidden") with ThiefAction
+case class ThiefLootAction(self : Thief.type, token : Token, cubes : Int) extends BaseAction("Loot".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, token) with ThiefAction
+case class ThiefLootRollAction(f : Thief.type, token : Token, random : Pattern) extends RandomAction[Pattern] with ThiefAction
+case class ThiefPickLockAction(self : Thief.type, cubes : Int) extends BaseAction("Pick Lock".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, "open", Vault) with ThiefAction
+case class ThiefPickLockRollAction(f : Thief.type, cubes : Int, random : Pattern) extends RandomAction[Pattern] with ThiefAction
+case class ThiefPickpocketAction(self : Thief.type, target : Faction, cubes : Int) extends BaseAction("Pickpocket".styled(self))(target, cubes.hl, "cube".s(cubes).hl) with ThiefAction
+case class ThiefPickpocketRollAction(f : Thief.type, target : Faction, cubes : Int, random : Pattern) extends RandomAction[Pattern] with ThiefAction
+case class ThiefBackstabAction(self : Thief.type, target : AttackTarget, cubes : Int) extends BaseAction("Backstab".styled(self))(target, cubes.hl, "cube".s(cubes).hl) with ThiefAction
 
 // KNIGHT
 trait KnightTurnQuestion extends FactionAction with NoClear { a : UserAction =>
@@ -1483,6 +1514,7 @@ trait GameImplicits {
     implicit def goblinsToPlayer(f : Goblins.type)(implicit game : Game) = game.states(f).asInstanceOf[GoblinsPlayer]
     implicit def dragonToPlayer(f : Dragon.type)(implicit game : Game) = game.states(f).asInstanceOf[DragonPlayer]
     implicit def caveToPlayer(f : Cave.type)(implicit game : Game) = game.states(f).asInstanceOf[CavePlayer]
+    implicit def thiefToPlayer(f : Thief.type)(implicit game : Game) = game.states(f).asInstanceOf[ThiefPlayer]
     implicit def factionToPlayer(f : Faction)(implicit game : Game) = game.states(f)
 
     implicit class FactionLogScore(f : Faction)(implicit game : Game) {
@@ -1493,7 +1525,7 @@ trait GameImplicits {
     }
 }
 
-class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame with ContinueGame with LoggedGame {
+class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame with ContinueGame with LoggedGame with GameThiefSupport with GameSetupSupport {
     private implicit val game = this
 
     private def logMarker(scope : String, block : String, message : String) : Unit = {
@@ -1661,74 +1693,25 @@ class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame wit
                 StartSetupAction
 
             case StartSetupAction =>
-                Shuffle3(Tiles.ambushes ++ Tiles.events ++ Tiles.treasures, Tiles.crystals, factions.has(Thief).??(Tiles.vaults), (m, c, v) => InitialTilesAction(m, c, v))
+                startSetup()
 
             case InitialTilesAction(m, c, v) =>
-                log("Shuffled tiles once")
-
-                board.expand()
-
-                board.cells(1)(0) = m(0)
-                board.cells(2)(1) = m(1)
-                board.cells(1)(2) = m(2)
-                board.cells(0)(1) = m(3)
-
-                board.expand()
-
-                Shuffle3(m.drop(4).take(11) ++ c.take(3) ++ v.take(2), m.drop(4).drop(11).take(11) ++ c.drop(3).take(3) ++ v.drop(2).take(2), m.drop(4).drop(11+11) ++ c.drop(3+3) ++ v.drop(2+2), (m, c, v) => GroupedTilesAction(m, c, v))
+                initialTiles(m, c, v)
 
             case GroupedTilesAction(l1, l2, l3) =>
-                tiles = l1 ++ l2 ++ l3
-
-                SetupNextAction
+                groupedTiles(l1, l2, l3)
 
             case SetupNextAction =>
-                val pending = setup.%!(states.contains)
+                setupNext()
 
-                if (pending.any) {
-                    val f = pending.head
-
-                    factions :+= f
-
-                    SetupFactionAction(f)
-                }
-                else
-                    InitDoneAction
-
-            case SetupFactionAction(f : Knight.type) =>
-                states += f -> new KnightPlayer(game, f)
-
-                Shuffle3(Treasures.all, Events.eventsFor(setup), SideQuests.questsFor(setup), ShuffledTreasuresEventsQuestsAction(f, _, _, _))
+            case SetupFactionAction(f) =>
+                setupFaction(f)
 
             case ShuffledTreasuresEventsQuestsAction(f, t, e, q) =>
-                treasures = t
-                events = e
-                f.sidequests = q
-
-                SetupNextAction
-
-            case SetupFactionAction(f : Goblins.type) =>
-                states += f -> new GoblinsPlayer(game, f)
-
-                f.monsters.pile = Monsters.all
-                f.secrets.pile = Secrets.all
-
-                SetupNextAction
-
-            case SetupFactionAction(f : Dragon.type) =>
-                states += f -> new DragonPlayer(game, f)
-
-                f.powers = $(FreeMove)
-
-                DrawPowersAction(f, 3, SetupNextAction)
-
-            case SetupFactionAction(f : Cave.type) =>
-                states += f -> new CavePlayer(game, f)
-
-                DrawOmensAction(f, 3, SetupNextAction)
+                setupKnightDraws(f, t, e, q)
 
             case InitDoneAction =>
-                StartPlayerTurnAction(factions(0))
+                initDone()
 
             case StartPlayerTurnAction(f) =>
                 log(DoubleLine)
@@ -2778,6 +2761,14 @@ class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame wit
 
                 ShowOpenEdgesAction(f, then)
 
+            case a => performInternalPart2(a, soft)
+        }
+    }
+
+    def performInternalPart2(a : Action, soft : Void) : Continue = {
+        implicit val action = a
+
+        action match {
             // GOBLINS
             case ContinuePlayerTurnAction(f : Goblins.type) =>
                 f.effects = $
@@ -2986,7 +2977,9 @@ class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame wit
                         factions.of[Knight.type]./~(e => f.tribes.%(_.population > 0).%(_.activated.not).%(_.raw > e.strength).%(_.hidden)./(t =>
                             UseSecretAction(f, |(t.tribe), HidingSpots, GoblinsAttackAction(f, t.tribe, e, DoneTribeAction(f, t.tribe))).as("Use", HidingSpots, "to attack", e, "with", t.tribe)
                         ))
-                    case Hex => factions.but(f)./(e => UseSecretAction(f, None, Hex, HexAction(f, e, GoblinsTopAction(f))).as("Use", Hex, "on", e).!(f.eye.population < 1))
+                    // Thief is filtered until cross-faction Thief effects are extracted from performInternal;
+                    // adding a HexAction(... Thief ...) case directly currently risks the JVM Method-too-large limit.
+                    case Hex => factions.but(f).but(Thief)./(e => UseSecretAction(f, None, Hex, HexAction(f, e, GoblinsTopAction(f))).as("Use", Hex, "on", e).!(f.eye.population < 1))
                     case CaveIn => $(UseSecretAction(f, None, CaveIn, CaveInMainAction(f, GoblinsTopAction(f))).as("Use", CaveIn).!(f.eye.population < 1))
                     case GoblinRuby => $(RevealSecretAction(f, GoblinRuby, GoblinsTopAction(f)).as("Reveal", GoblinRuby))
                     case Trap => $(RevealSecretAction(f, Trap, GoblinsTopAction(f)).as("Reveal", Trap))
@@ -4258,6 +4251,15 @@ class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame wit
 
                 DrawOmensAction(f, o, CaveMainAction(f))
 
+            case ContinuePlayerTurnAction(f : Thief.type) =>
+                startThiefTurn(f)
+
+            case ThiefTurnAction(f) =>
+                thiefTurn(f)
+
+            case a : ThiefAction =>
+                performThief(a)
+
             case CaveMainAction(f) => (() => {
                 implicit def convert(c : OmenCard, selected : Boolean) = selected.?(c.imgs).|(c.img)
 
@@ -4302,7 +4304,9 @@ class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame wit
                                 .!(p.num > n, "too many")
                                 .!(p.but(Boulder).but(Quartz).but(Mushroom).any, "composition")
                         } ++
-                        factions.but(f)./(e =>
+                        // Thief is filtered until Cave cross-faction effects are extracted from performInternal;
+                        // direct SoporificSporesMainAction(... Thief ...) handling exceeded the method bytecode budget.
+                        factions.but(f).but(Thief)./(e =>
                             SoporificSporesMainAction(f, e, c).as(3.hl, "X", omens(Quartz, Mushroom, Trail), "Soporific Spores".hh, MDash, "Hurt", e)
                                 .!(p.num < 3)
                                 .!(p.num > 3, "too many")

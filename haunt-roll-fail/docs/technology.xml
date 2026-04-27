@@ -41,7 +41,7 @@
       <focus>Manual browser smoke validation of startup, rendering, and critical gameplay scenarios from `index.html`.</focus>
     </phase-level>
     <VastHost-Sim-Node>
-      <command>PowerShell: `$env:HRF_MAIN='hrf.VastSimEntry'; sbt run` (Scala.js output on Node). Optional env for `vast.Host.main`: `VAST_SIM_SKIP_ROUNDTRIP=1` skips per-action serialize round-trip (faster); `VAST_SIM_ITERATIONS=N` sets outer batch count (default 20 × 16 games). See `AGENTS.md`.</command>
+      <command>PowerShell: `$env:HRF_VAST_SIM='1'; sbt run` (Scala.js output on Node; links `hrf.VastSimEntry`). Optional env for `vast.Host.main`: `VAST_SIM_SKIP_ROUNDTRIP=1` skips per-action serialize round-trip (faster); `VAST_SIM_ITERATIONS=N` sets outer batch count (default 20 × 16 games). See `AGENTS.md`.</command>
       <focus>Bot-driven Vast simulations and optional serialization verification; config line `[VastHost][config]` in stdout.</focus>
     </VastHost-Sim-Node>
     <mocking-policy>Prefer deterministic fixtures, replay logs, and host/browser scenario checks over broad mocks. Introduce fakes only around external boundaries.</mocking-policy>

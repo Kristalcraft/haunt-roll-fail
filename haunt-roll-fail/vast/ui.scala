@@ -298,6 +298,12 @@ class UI(val uir : ElementAttachmentPoint, arity : Int, val resources : Resource
                 ("Crystalization " ~ game.shrunk.hl ~ "/" ~ "5".hh).div ~
                 ("Hatred " ~ game.collapse.?("Infinite").|("Boundless").hl).div
 
+            case f : Thief.type =>
+                ("Move " ~ (f.movement - f.moves).hl ~ "/" ~ f.movement.hh ~ " | ".hh ~ "Stealth " ~ f.effectiveStealth.hl ~ "/" ~ f.stealth.hh).div ~
+                ("Thievery " ~ f.thievery.hl ~ " | ".hh ~ "Action cubes " ~ f.actionCubes.hl).div ~
+                ("Carried " ~ f.carried.num.hl ~ " | ".hh ~ "Stashed " ~ f.stashed.hl ~ "/" ~ 6.hh).div ~
+                ("Loot Drop " ~ f.lootDrop.hl).div
+
             case _ => Empty
         }
 
@@ -416,6 +422,32 @@ class UI(val uir : ElementAttachmentPoint, arity : Int, val resources : Resource
                     HGap ~
                     HGap ~
                     Image("cave-board")(styles.factionboard) ~
+                    HGap ~
+                    HGap ~
+                    HGap ~
+                    HGap ~
+                    HGap ~
+                    HGap ~
+                    HGap ~
+                    HGap
+                ).div(xlo.flexvcenter)), {
+                    case (f : Faction, more : Boolean) => onFactionStatus(f, more, None)
+                    case _ =>
+                        overlayPane.invis()
+                        overlayPane.clear()
+                })
+
+            case f : Thief.type =>
+                showOverlay(overlayScrollX((
+                    HGap ~
+                    HGap ~
+                    HGap ~
+                    f.name.styled(styles.get(faction)).larger.larger ~
+                    HGap ~
+                    HGap ~
+                    HGap ~
+                    HGap ~
+                    Image("thief-board")(styles.factionboard) ~
                     HGap ~
                     HGap ~
                     HGap ~

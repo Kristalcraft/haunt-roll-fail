@@ -80,10 +80,12 @@
     <V-M-VAST-GAME MODULE="M-VAST-GAME" PRIORITY="high">
       <test-files>
         <file>vast/game.scala</file>
+        <file>vast/game-setup.scala</file>
       </test-files>
       <module-checks>
         <check-1>sbt compile</check-1>
         <check-2>sbt fastOptJS</check-2>
+        <check-3>After large `performInternal` splits (`performInternalPart2`), build with `HRF_VAST_SIM=1`, then on Node: `VAST_SIM_ITERATIONS=1` (optionally `VAST_SIM_SKIP_ROUNDTRIP=1` for a faster smoke) using `hrf-fastopt.js`.</check-3>
       </module-checks>
       <scenarios>
         <scenario-1 kind="success">Legal actions update the game state correctly for supported factions.</scenario-1>
@@ -240,6 +242,8 @@
       <test-files>
         <file>rules/thief.xml</file>
         <file>vast/game.scala</file>
+        <file>vast/game-thief.scala</file>
+        <file>vast/game-setup.scala</file>
         <file>vast/meta.scala</file>
         <file>vast/ui.scala</file>
         <file>vast/serialize.scala</file>
@@ -251,17 +255,29 @@
         <check-2>sbt fastOptJS</check-2>
         <check-3>Run a five-player startup and focused Thief scenario pass.</check-3>
         <check-4>Run host-side replay/simulation checks that include Thief actions.</check-4>
+        <check-5>Before continuing implementation, rerun `sbt compile` because the last post-filter compile was interrupted after documenting the JVM limit workaround.</check-5>
       </module-checks>
       <scenarios>
-        <scenario-1 kind="success">A five-player setup including Thief starts successfully and exposes only legal Thief actions.</scenario-1>
-        <scenario-2 kind="success">Thief interactions serialize, replay, and render correctly.</scenario-2>
-        <scenario-3 kind="failure">Existing four-player setups continue to work unchanged after Thief support lands.</scenario-3>
+        <scenario-1 kind="success">A five-player setup including Thief starts successfully, mixes Vault tiles from `setup.has(Thief)`, and exposes only legal Thief actions.</scenario-1>
+        <scenario-2 kind="success">Thief setup creates runtime state for Movement, Stealth, Thievery, action cubes, Entrance position, carried loot, and stashed loot.</scenario-2>
+        <scenario-3 kind="success">Thief core turn flow supports stat assignment, movement, dark-tile peek/reveal, end-turn cleanup, and death basics according to `rules/thief.xml`.</scenario-3>
+        <scenario-4 kind="success">Thief Loot, Pick Lock, Vault, stash, Dragon Gem, treasure shortage, and six-stash victory behavior match `rules/thief.xml`.</scenario-4>
+        <scenario-5 kind="success">Pickpocket, Backstab, Stealth targeting, target-once-per-turn, and Unnatural Evasion integrate with Knight, Goblins, Dragon, and Cave interactions.</scenario-5>
+        <scenario-6 kind="success">Thief interactions serialize, replay, render, and simulate through host/bot paths correctly.</scenario-6>
+        <scenario-7 kind="failure">Existing four-player setups continue to work unchanged after Thief support lands.</scenario-7>
+        <scenario-8 kind="blocked">Additional Thief/cross-faction action handlers must not be added directly to `Game.performInternal`; first extract smaller dispatch helpers to avoid JVM `Method too large`.</scenario-8>
       </scenarios>
       <required-log-markers>
         <marker-1>[VastThief][enable][BLOCK_ENABLE_THIEF_FIFTH_PLAYER]</marker-1>
+        <marker-2>[VastThief][turn][BLOCK_THIEF_TURN]</marker-2>
+        <marker-3>[VastThief][loot][BLOCK_THIEF_LOOT_STASH]</marker-3>
       </required-log-markers>
       <required-trace-assertions>
         <assertion-1>Five-player enablement must prove both new Thief behavior and non-regression of current four-player flows.</assertion-1>
+        <assertion-2>Each implemented Thief mechanic must cite the matching `rules/thief.xml` section in work notes or code review notes.</assertion-2>
+        <assertion-3>Host evidence at the checkpoint reached `[VastThief][enable]`, `[VastThief][turn]`, and `[VastThief][loot]`; remaining failures were cross-faction targeting gaps, not initial Thief setup failure.</assertion-3>
+        <assertion-4>Temporary filters around Goblins Hex and Cave Soporific Spores prevent unimplemented Thief target handlers until cross-faction extraction is complete.</assertion-4>
+        <assertion-5>Refactor wave 1 preserves action class names and delegates setup/Thief bodies through `GameSetupSupport` and `GameThiefSupport` without adding new behavior.</assertion-5>
       </required-trace-assertions>
       <wave-follow-up>Re-run setup, UI, serialization, and simulation checks for all touched surfaces after each Thief wave.</wave-follow-up>
       <phase-follow-up>Do not mark Thief support complete until both five-player and four-player evidence are green.</phase-follow-up>

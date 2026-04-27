@@ -132,12 +132,12 @@ tests/
 
 ## Vast host simulation (Scala.js + Node)
 
-Batch bot simulations are driven by `vast.Host.main`, invoked from the Scala.js build via `hrf.VastSimEntry` (see `build.sbt` / `HRF_MAIN`).
+Batch bot simulations are driven by `vast.Host.main`, invoked from the Scala.js build via `hrf.VastSimEntry` when **`HRF_VAST_SIM=1`** is set during `sbt` (see `build.sbt`). Do not set a sticky `HRF_MAIN` for this — it used to override the browser bundle.
 
 **Run (PowerShell, from `haunt-roll-fail/`):**
 
 ```powershell
-$env:HRF_MAIN = 'hrf.VastSimEntry'
+$env:HRF_VAST_SIM = '1'
 sbt run
 ```
 
@@ -153,7 +153,7 @@ At startup the harness prints `[VastHost][config] skipSerializeRoundTrip=... out
 **Typical fast run (no round-trip check):**
 
 ```powershell
-$env:HRF_MAIN = 'hrf.VastSimEntry'
+$env:HRF_VAST_SIM = '1'
 $env:VAST_SIM_SKIP_ROUNDTRIP = '1'
 sbt run
 ```

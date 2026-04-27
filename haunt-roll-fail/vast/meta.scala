@@ -14,7 +14,7 @@
 // END_MODULE_MAP
 //
 // START_CHANGE_SUMMARY
-// LAST_CHANGE: v0.1.0 - Added initial GRACE contracts, semantic blocks, and stable log markers for the first governed Vast wave.
+// LAST_CHANGE: Thief-only image assets: thief-board, thief-coin, thief-skill-2/4, vault-token; conditional load when Thief in setup.
 // END_CHANGE_SUMMARY
 package vast
 //
@@ -45,11 +45,11 @@ object Meta extends MetaGame {
     val name = "vast"
     val label = "Vast: The Crystal Caverns"
 
-    val factions = $(Knight, Goblins, Dragon, Cave, Thief).but(Thief)
+    val factions = $(Knight, Goblins, Dragon, Cave, Thief)
 
     val minPlayers = 4
 
-    override val quickFactions = factions.take(4)
+    override val quickFactions = factions.but(Thief)
 
     val options = $
 
@@ -73,9 +73,10 @@ object Meta extends MetaGame {
         // START_BLOCK_VALIDATE_FACTIONS
         logMarker("validateFactions", "BLOCK_VALIDATE_FACTIONS", "requested=" + ff./(_.short).mkString(","))
         val result = InfoResult("Vast") &&
-            (ff.has(Thief)).?(ErrorResult("Thief not implemented yet")) &&
             (ff.num < 4).?(ErrorResult("Select at least four factions")) &&
-            (ff.num > 4).?(ErrorResult("Max four factions"))
+            (ff.num > 5).?(ErrorResult("Max five factions")) &&
+            (ff.has(Thief) && ff.num != 5).?(ErrorResult("Thief requires the five-player setup")) &&
+            (ff.num == 5 && ff.has(Thief).not).?(ErrorResult("Five-player setup requires Thief"))
         // END_BLOCK_VALIDATE_FACTIONS
         result
     }
@@ -211,6 +212,7 @@ object Meta extends MetaGame {
         ImageAsset("dragon-sleeping" ) ::
         ImageAsset("chest" ) ::
         ImageAsset("chest-highlight" ) ::
+        ImageAsset("vault", "chest" ) ::
         ImageAsset("event" ) ::
         ImageAsset("ambush" ) ::
         ImageAsset("crystal" ) ::
@@ -347,6 +349,10 @@ object Meta extends MetaGame {
         ImageAsset("empty-side-2") ::
         ImageAsset("empty-open-1") ::
         ImageAsset("empty-tunnel-1") ::
+        ImageAsset("vault-corner-4") ::
+        ImageAsset("vault-side-8") ::
+        ImageAsset("vault-side-9") ::
+        ImageAsset("vault-side-a") ::
         ImageAsset("canyon") ::
         ImageAsset("magma") ::
         ImageAsset("river") ::
@@ -434,6 +440,17 @@ object Meta extends MetaGame {
         ImageAsset("secret-trap") ::
 
 
+    $) ::
+    ConditionalAssetsList((factions : $[Faction], options : $[O]) => factions.has(Thief), "board")(
+        ImageAsset("thief-board") ::
+    $) ::
+    ConditionalAssetsList((factions : $[Faction], options : $[O]) => factions.has(Thief), "icons")(
+        ImageAsset("thief-coin") ::
+        ImageAsset("thief-skill-2") ::
+        ImageAsset("thief-skill-4") ::
+    $) ::
+    ConditionalAssetsList((factions : $[Faction], options : $[O]) => factions.has(Thief), "figures")(
+        ImageAsset("vault-token") ::
     $) ::
     $
 }

@@ -56,6 +56,7 @@
       <depends>M-VAST-RULES</depends>
       <target>
         <source>vast/game.scala</source>
+        <source>vast/game-setup.scala</source>
       </target>
       <observability>
         <log-prefix>[VastGame]</log-prefix>
@@ -135,7 +136,7 @@
       </notes>
     </M-VAST-BOT>
 
-    <M-VAST-THIEF-SUPPORT NAME="VastThiefSupport" TYPE="CORE_LOGIC" LAYER="3" ORDER="1" STATUS="planned">
+    <M-VAST-THIEF-SUPPORT NAME="VastThiefSupport" TYPE="CORE_LOGIC" LAYER="3" ORDER="1" STATUS="partial">
       <contract>
         <purpose>Introduce Thief as a supported fifth-player faction without regressing current four-player gameplay.</purpose>
         <inputs>
@@ -153,11 +154,14 @@
         </errors>
       </contract>
       <interface>
-        <export-Thief PURPOSE="Planned Thief faction support surface." />
+        <export-Thief PURPOSE="Fifth-player faction support surface, currently partially wired through setup and basic turn actions." />
+        <export-ThiefPlayer PURPOSE="Runtime state for Thief stats, action cubes, carried loot, stashed loot, path, and per-turn targeting." />
       </interface>
-      <depends>M-VAST-RULES, M-VAST-GAME, M-VAST-SERIALIZE, M-VAST-BOT</depends>
+      <depends>M-VAST-RULES, M-VAST-GAME, M-VAST-META, M-VAST-UI, M-VAST-SERIALIZE, M-VAST-BOT, M-VAST-HOST</depends>
       <target>
         <source>vast/game.scala</source>
+        <source>vast/game-thief.scala</source>
+        <source>vast/game-setup.scala</source>
         <source>vast/meta.scala</source>
         <source>vast/ui.scala</source>
         <source>vast/serialize.scala</source>
@@ -171,6 +175,13 @@
       <verification-ref>V-M-VAST-THIEF-SUPPORT</verification-ref>
       <notes>
         <note-1>Keep four-player setup valid while explicitly preparing the engine for a fifth role.</note-1>
+        <note-2>Execute Thief support as vertical slices: GRACE refresh, minimal five-player boot, core turn loop, loot/vault/stash, player interactions, cross-faction integration, then serialization/UI/host completion.</note-2>
+        <note-3>Use placeholder browser presentation until final Thief art assets are available; placeholder UI must still expose gameplay state clearly.</note-3>
+        <checkpoint-2026-04-27>Partial implementation exists in `vast/game.scala`, `vast/meta.scala`, `vast/ui.scala`, and `vast/VastHost.scala`: five-player validation, Vault tile inclusion, `ThiefPlayer`, Entrance setup, basic stat/action-cube turn flow, movement, dark-tile reveal choice, Loot, Pick Lock, carried/stashed loot, six-stash victory, and status UI. Host evidence reached `[VastThief][enable]`, `[VastThief][turn]`, and `[VastThief][loot]` markers before exposing remaining cross-faction gaps.</checkpoint-2026-04-27>
+        <blocker-2026-04-27>`vast.Game.performInternal` is near the JVM per-method bytecode limit and hit `Method too large` when additional Thief cross-faction cases were added directly. Next implementation must extract faction/action dispatch helpers instead of adding more cases to the monolithic match.</blocker-2026-04-27>
+        <next-step>Before adding Pickpocket/Backstab/full cross-faction behavior, refactor `performInternal` into smaller faction dispatch sections or route new action families through helper methods. Then rerun compile, fastOptJS, host round-trip, and Composer browser smoke.</next-step>
+        <checkpoint-2026-04-28>Refactor wave 1 extracted Thief helpers to `vast/game-thief.scala` and setup helpers to `vast/game-setup.scala` using self-typed traits mixed into `Game`. Public action shapes remain in `vast/game.scala`; behavior is intended to be unchanged.</checkpoint-2026-04-28>
+        <checkpoint-2026-04-28-wave2>Refactor wave 2 split the monolithic `Game.performInternal` match: arms from Goblins through `SelfPerform` live in `performInternalPart2` in `vast/game.scala`; prior arms stay in `performInternal`, delegating unknown actions to part 2. Intended behavior-preserving; verification: `sbt compile`, `fastOptJS`, Vast sim.</checkpoint-2026-04-28-wave2>
       </notes>
     </M-VAST-THIEF-SUPPORT>
 
@@ -370,11 +381,19 @@
       <step-2 module="M-VAST-HOST" status="done" verification="V-M-VAST-HOST">Document the host/simulation path for batch validation and future AI benchmarking.</step-2>
     </Phase-3>
 
-    <Phase-4 name="Thief enablement" status="pending">
+    <Phase-4 name="Thief enablement" status="in_progress">
       <goal>Implement and verify Thief as the fifth supported player role.</goal>
-      <step-1 module="M-VAST-THIEF-SUPPORT" status="pending" verification="V-M-VAST-THIEF-SUPPORT">Map `rules/thief.xml` to concrete engine, UI, serialization, and bot requirements.</step-1>
-      <step-2 module="M-VAST-META" status="pending" verification="V-M-VAST-META">Expand faction validation and setup from four-player-only to verified five-player support.</step-2>
-      <step-3 module="M-VAST-UI" status="pending" verification="V-M-VAST-UI">Adjust UI and browser interactions for a fifth faction without regressions.</step-3>
+      <step-1 module="M-VAST-THIEF-SUPPORT" status="done" verification="V-M-VAST-THIEF-SUPPORT">Refresh GRACE artifacts and map `rules/thief.xml` to concrete execution slices.</step-1>
+      <step-2 module="M-VAST-META" status="partial" verification="V-M-VAST-META">Expand faction validation and setup from four-player-only to verified five-player support while preserving four-player starts. Current code allows 5p with Thief and keeps quick play 4p, but the latest post-filter compile still needs to be rerun.</step-2>
+      <step-3 module="M-VAST-THIEF-SUPPORT" status="partial" verification="V-M-VAST-THIEF-SUPPORT">Add minimal `ThiefPlayer` setup, Entrance placement, basic stats, action cubes, and placeholder status UI. Implemented at checkpoint, pending final verification after the last documentation/filter changes.</step-3>
+      <step-4 module="M-VAST-THIEF-SUPPORT" status="partial" verification="V-M-VAST-THIEF-SUPPORT">Implement the Thief core turn loop: stat assignment, movement, dark-tile peek/reveal, end-turn cleanup, and death basics. Basic flow exists; full death reward/respawn semantics remain pending.</step-4>
+      <step-5 module="M-VAST-THIEF-SUPPORT" status="partial" verification="V-M-VAST-THIEF-SUPPORT">Implement Loot, Pick Lock, Vault, carried/stashed loot, Dragon Gem handling, treasure shortage, and six-stash victory. Basic Loot/Pick Lock/stash/victory exists; treasure shortage and upgrade-space details remain pending.</step-5>
+      <step-6 module="M-VAST-THIEF-SUPPORT" status="blocked" verification="V-M-VAST-THIEF-SUPPORT">Implement Pickpocket, Backstab, Stealth targeting, target-once-per-turn tracking, and Unnatural Evasion. Blocked on extracting action dispatch from `performInternal` to avoid JVM `Method too large`.</step-6>
+      <step-7 module="M-VAST-GAME" status="blocked" verification="V-M-VAST-GAME">Integrate cross-faction rules for Knight, Goblins, Dragon, and Cave interactions with Thief. Temporary generation filters exclude some old cross-faction actions from targeting Thief until handlers can be added outside the monolithic match.</step-7>
+      <step-8 module="M-VAST-UI" status="partial" verification="V-M-VAST-UI">Complete browser status/overlay and interaction support for the fifth faction with placeholder assets. Status UI exists; board/overlay art remains placeholder.</step-8>
+      <step-9 module="M-VAST-SERIALIZE" status="partial" verification="V-M-VAST-SERIALIZE">Verify new Thief external actions serialize and parse through replay paths. Host round-trip reached Thief markers before cross-faction gaps; rerun after dispatch refactor.</step-9>
+      <step-10 module="M-VAST-BOT" status="partial" verification="V-M-VAST-BOT">Add legal-action-safe Thief bot behavior for host simulation. Generic bot can choose legal actions, but no Thief-specific evaluator exists yet.</step-10>
+      <step-11 module="M-VAST-HOST" status="partial" verification="V-M-VAST-HOST">Include five-player Thief scenarios in host-side simulation and round-trip checks. Host run exercises Thief setup/turn/loot/stash, then exposes remaining cross-faction blockers.</step-11>
     </Phase-4>
   </ImplementationOrder>
 

@@ -128,8 +128,8 @@ object Host {
     // LINKS: M-VAST-HOST, V-M-VAST-HOST, V-M-VAST-SERIALIZE
     // END_CONTRACT: main
     def main(args : Array[String]) : Unit = {
-        val allFactions : $[Faction] = $(Knight, Goblins, Dragon, Cave)
-        val allComb = allFactions.combinations(4).$
+        val allFactions : $[Faction] = $(Knight, Goblins, Dragon, Cave, Thief)
+        val allComb = allFactions.combinations(5).$
         val factions = allFactions
         val repeat = 0.to(15).map(_ => factions)
 

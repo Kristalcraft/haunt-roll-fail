@@ -15,12 +15,13 @@
 
     <M-VAST-GAME NAME="VastGameLogic" TYPE="CORE_LOGIC" STATUS="implemented">
       <purpose>Implements factions, board state, actions, hidden information, rule enforcement, and win-condition resolution for Vast.</purpose>
-      <path>vast/game.scala</path>
+      <path>vast/game.scala; vast/game-setup.scala</path>
       <depends>M-VAST-RULES</depends>
       <verification-ref>V-M-VAST-GAME</verification-ref>
       <annotations>
         <type-Faction PURPOSE="Asymmetrical playable faction model." />
         <type-Action PURPOSE="Rule-driven transition surface for the game engine." />
+        <trait-GameSetupSupport PURPOSE="Extracted setup/startup helper dispatch used to reduce `Game.performInternal` bytecode pressure." />
       </annotations>
     </M-VAST-GAME>
 
@@ -55,13 +56,20 @@
       </annotations>
     </M-VAST-BOT>
 
-    <M-VAST-THIEF-SUPPORT NAME="VastThiefSupport" TYPE="CORE_LOGIC" STATUS="planned">
+    <M-VAST-THIEF-SUPPORT NAME="VastThiefSupport" TYPE="CORE_LOGIC" STATUS="partial">
       <purpose>Implement the Thief role as a supported fifth player across setup, rules logic, UI, serialization, and bot/simulation boundaries.</purpose>
-      <path>vast/game.scala; vast/meta.scala; vast/ui.scala; vast/serialize.scala; vast/bot.scala; vast/VastHost.scala</path>
+      <path>vast/game.scala; vast/game-thief.scala; vast/game-setup.scala; vast/meta.scala; vast/ui.scala; vast/serialize.scala; vast/bot.scala; vast/VastHost.scala</path>
       <depends>M-VAST-RULES, M-VAST-GAME, M-VAST-META, M-VAST-UI, M-VAST-SERIALIZE, M-VAST-BOT, M-VAST-HOST</depends>
       <verification-ref>V-M-VAST-THIEF-SUPPORT</verification-ref>
       <annotations>
-        <type-Thief PURPOSE="Planned fifth-player faction aligned with `rules/thief.xml`." />
+        <type-Thief PURPOSE="Fifth-player faction aligned with `rules/thief.xml`; partially enabled in setup and basic turn flow." />
+        <type-ThiefPlayer PURPOSE="Runtime state for Thief stats, action cubes, carried loot, stashed loot, path, and per-turn targeting." />
+        <slice-MinimalBoot STATUS="partial" PURPOSE="Five-player setup, Vault tile inclusion, Entrance placement, and placeholder/status UI." />
+        <slice-CoreTurn STATUS="partial" PURPOSE="Basic stat assignment defaults, movement, dark-tile reveal choice, and end-turn path cleanup." />
+        <slice-LootVaultStash STATUS="partial" PURPOSE="Basic Loot, Pick Lock, carried/stashed loot, Dragon Gem stash handling, and six-stash victory." />
+        <slice-CrossFaction STATUS="blocked" PURPOSE="Pickpocket, Backstab, Unnatural Evasion, and incoming Knight/Goblins/Dragon/Cave effects require dispatch extraction before more handlers are added." />
+        <trait-GameThiefSupport PURPOSE="Extracted Thief helper dispatch and verification markers for the partial 5p checkpoint." />
+        <constraint-JVMMethodLimit PURPOSE="`vast.Game.performInternal` / `performInternalPart2` — large action dispatch split across two methods; add new Thief or Cave cross-faction cases preferentially in the smaller helper or dedicated traits before growing either match further." />
       </annotations>
     </M-VAST-THIEF-SUPPORT>
 
@@ -108,6 +116,7 @@
     <CrossLink from="M-VAST-THIEF-SUPPORT" to="M-VAST-GAME" relation="extends faction logic and setup constraints in" />
     <CrossLink from="M-VAST-THIEF-SUPPORT" to="M-VAST-UI" relation="requires fifth-player rendering and interaction support in" />
     <CrossLink from="M-VAST-THIEF-SUPPORT" to="M-VAST-BOT" relation="needs legal automated play support in" />
+    <CrossLink from="M-VAST-THIEF-SUPPORT" to="M-VAST-HOST" relation="requires five-player simulation and replay checks in" />
     <CrossLink from="M-HRF-WEB-RUNTIME" to="M-VAST-META" relation="registers and launches" />
   </Project>
 </KnowledgeGraph>
