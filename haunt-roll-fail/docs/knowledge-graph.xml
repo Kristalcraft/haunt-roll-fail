@@ -69,7 +69,7 @@
         <slice-LootVaultStash STATUS="partial" PURPOSE="Basic Loot, Pick Lock, carried/stashed loot, Dragon Gem stash handling, and six-stash victory." />
         <slice-CrossFaction STATUS="blocked" PURPOSE="Pickpocket, Backstab, Unnatural Evasion, and incoming Knight/Goblins/Dragon/Cave effects require dispatch extraction before more handlers are added." />
         <trait-GameThiefSupport PURPOSE="Extracted Thief helper dispatch and verification markers for the partial 5p checkpoint." />
-        <constraint-JVMMethodLimit PURPOSE="`vast.Game.performInternal` / `performInternalPart2` — large action dispatch split across two methods; add new Thief or Cave cross-faction cases preferentially in the smaller helper or dedicated traits before growing either match further." />
+        <constraint-JVMMethodLimit PURPOSE="`vast.Game.performInternal` + `performInternalPart2` (Goblins) + `performInternalPart3` (Dragon … EndGame); add new cross-faction cases in helpers or a dedicated trait before inflating a single `match`." />
       </annotations>
     </M-VAST-THIEF-SUPPORT>
 

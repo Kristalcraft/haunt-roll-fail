@@ -1,5 +1,5 @@
 // FILE: vast/game.scala
-// VERSION: 0.1.3
+// VERSION: 0.1.4
 // START_MODULE_CONTRACT
 // PURPOSE: Implement the authoritative Vast game state machine, including setup, action resolution, state validation, and game progression.
 // SCOPE: Own runtime state, apply Actions to produce Continue values, maintain board/faction invariants, and emit player-facing logs.
@@ -14,7 +14,7 @@
 // END_MODULE_MAP
 //
 // START_CHANGE_SUMMARY
-// LAST_CHANGE: v0.1.3 - Split `performInternal` into `performInternal` + `performInternalPart2` at the Goblins section so neither JVM method holds the full match (frees bytecode headroom; behavior unchanged). Wave 1: game-setup / game-thief traits.
+// LAST_CHANGE: v0.1.4 - Split `performInternalPart2` into Goblins (`performInternalPart2`) and Dragon+rest (`performInternalPart3`); v0.1.3: performInternal+Part2, game-setup / game-thief traits.
 // END_CHANGE_SUMMARY
 package vast
 //
@@ -3622,6 +3622,14 @@ class Game(val setup : $[Faction], val options : $[Meta.O]) extends BaseGame wit
 
                 then
 
+            case a => performInternalPart3(a, soft)
+        }
+    }
+
+    def performInternalPart3(a : Action, soft : Void) : Continue = {
+        implicit val action = a
+
+        action match {
             // DRAGON
             case ContinuePlayerTurnAction(f : Dragon.type) =>
                 if (f.position.none) {
