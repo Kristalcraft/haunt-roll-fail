@@ -81,6 +81,7 @@
       <test-files>
         <file>vast/game.scala</file>
         <file>vast/game-setup.scala</file>
+        <file>vast/game-goblins.scala</file>
         <file>vast/game-dragon.scala</file>
       </test-files>
       <module-checks>

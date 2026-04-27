@@ -15,7 +15,7 @@
 
     <M-VAST-GAME NAME="VastGameLogic" TYPE="CORE_LOGIC" STATUS="implemented">
       <purpose>Implements factions, board state, actions, hidden information, rule enforcement, and win-condition resolution for Vast.</purpose>
-      <path>vast/game.scala; vast/game-setup.scala; vast/game-dragon.scala</path>
+      <path>vast/game.scala; vast/game-setup.scala; vast/game-goblins.scala; vast/game-dragon.scala</path>
       <depends>M-VAST-RULES</depends>
       <verification-ref>V-M-VAST-GAME</verification-ref>
       <annotations>
@@ -69,7 +69,8 @@
         <slice-LootVaultStash STATUS="partial" PURPOSE="Basic Loot, Pick Lock, carried/stashed loot, Dragon Gem stash handling, and six-stash victory." />
         <slice-CrossFaction STATUS="blocked" PURPOSE="Pickpocket, Backstab, Unnatural Evasion, and incoming Knight/Goblins/Dragon/Cave effects require dispatch extraction before more handlers are added." />
         <trait-GameThiefSupport PURPOSE="Extracted Thief helper dispatch and verification markers for the partial 5p checkpoint." />
-        <constraint-JVMMethodLimit PURPOSE="`performInternal`, `performInternalPart2` (Goblins), `performInternalPart3` (lift→`GameDragonSupport#dragonDispatchPart3`), `caveTailPart3` (Cave/Thief/board); extend via small traits or new helper methods before ballooning one `match`." />
+        <constraint-JVMMethodLimit PURPOSE="`performInternal`, `performInternalPart2` (lift→`GameGoblinsSupport#goblinDispatchPart2`), `performInternalPart3` (lift→`GameDragonSupport#dragonDispatchPart3`), `caveTailPart3` (Cave/Thief/board); extend via small traits or new helper methods before ballooning one `match`." />
+        <trait-GameGoblinsSupport PURPOSE="Goblins `PartialFunction` extracted for bytecode and clarity; requires implicit `Game` at call like other faction dispatches."/>
         <trait-GameDragonSupport PURPOSE="Dragon `PartialFunction` extracted for bytecode and clarity; requires implicit `Game` at call for `GameImplicits` (e.g. `dragonToPlayer`)."/>
       </annotations>
     </M-VAST-THIEF-SUPPORT>
