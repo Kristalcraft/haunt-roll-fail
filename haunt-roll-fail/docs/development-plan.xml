@@ -57,6 +57,7 @@
       <target>
         <source>vast/game.scala</source>
         <source>vast/game-setup.scala</source>
+        <source>vast/game-dragon.scala</source>
       </target>
       <observability>
         <log-prefix>[VastGame]</log-prefix>
@@ -183,6 +184,7 @@
         <checkpoint-2026-04-28>Refactor wave 1 extracted Thief helpers to `vast/game-thief.scala` and setup helpers to `vast/game-setup.scala` using self-typed traits mixed into `Game`. Public action shapes remain in `vast/game.scala`; behavior is intended to be unchanged.</checkpoint-2026-04-28>
         <checkpoint-2026-04-28-wave2>Refactor wave 2 split the monolithic `Game.performInternal` match: arms from Goblins through `SelfPerform` live in `performInternalPart2` in `vast/game.scala`; prior arms stay in `performInternal`, delegating unknown actions to part 2. Intended behavior-preserving; verification: `sbt compile`, `fastOptJS`, Vast sim.</checkpoint-2026-04-28-wave2>
         <checkpoint-2026-04-28-wave3>Refactor wave 3 split `performInternalPart2` at the Dragon section: Goblins-only arms stay in part 2; Dragon through `SelfPerform` move to `performInternalPart3` in `vast/game.scala` (bytecode / maintainability, behavior-preserving).</checkpoint-2026-04-28-wave3>
+        <checkpoint-2026-04-28-wave4>Wave 4 moves Dragon `PartialFunction` dispatch from `caveTailPart3`/`performInternalPart3` into `vast/game-dragon.scala` as `GameDragonSupport#dragonDispatchPart3`; `caveTailPart3` retains Cave, Thief hooks, and board helpers. Call sites pass implicit `Game` for `GameImplicits` faction→player enrichment.</checkpoint-2026-04-28-wave4>
       </notes>
     </M-VAST-THIEF-SUPPORT>
 
