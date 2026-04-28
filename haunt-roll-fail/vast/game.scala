@@ -1107,6 +1107,14 @@ class CavePlayer(val game : Game, val faction : Cave.type) extends Player {
     var omens : $[OmenCard] = $
 }
 
+sealed trait ThiefUpgrade extends Record with Elementary
+case object LockPickingKit extends ThiefUpgrade { def elem = "Lock Picking Kit".hl }
+case object ClimbingGear extends ThiefUpgrade { def elem = "Climbing Gear".hl }
+case object HandCrossbow extends ThiefUpgrade { def elem = "Hand Crossbow".hl }
+case object StickyFingers extends ThiefUpgrade { def elem = "Sticky Fingers".hl }
+case object UnnaturalEvasion extends ThiefUpgrade { def elem = "Unnatural Evasion".hl }
+case class StatBoost(stat : String) extends ThiefUpgrade { def elem = ("+1 " + stat).hl }
+
 class ThiefPlayer(val game : Game, val faction : Thief.type) extends Player {
     var position = Relative(0, 0)
     var statsAssigned = false
@@ -1119,6 +1127,10 @@ class ThiefPlayer(val game : Game, val faction : Thief.type) extends Player {
     var stashed = 0
     var path : $[Relative] = $
     var targeted : $[Faction] = $
+    var upgrades : $[ThiefUpgrade] = $
+    var usedStickyFingers = false
+    var usedEvasion = false
+    var dead = false
 
     def moves = path.num
     def effectiveStealth = max(0, stealth - carried.num)
@@ -1200,6 +1212,8 @@ case class ThiefPickpocketAction(self : Thief.type, target : Faction, cubes : In
 case class ThiefPickpocketRollAction(f : Thief.type, target : Faction, cubes : Int, random : Pattern) extends RandomAction[Pattern] with ThiefAction
 case class ThiefBackstabAction(self : Thief.type, target : AttackTarget, cubes : Int) extends BaseAction("Backstab".styled(self))(target, cubes.hl, "cube".s(cubes).hl) with ThiefAction
 case class ThiefHideLootAction(self : Thief.type, cubes : Int) extends BaseAction("Hide Loot".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, "reduce Loot Drop") with ThiefAction
+case class ThiefClimbAction(self : Thief.type, direction : Bearing, cubes : Int, dark : Boolean) extends BaseAction("Climb".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, "Move", direction.elem ~ (direction.dy == 0).?(" ".txt), dark.?("Dark".hl)) with MoveAction with ThiefAction
+case class ThiefStashChoiceAction(self : Thief.type, upgrade : |[ThiefUpgrade]) extends BaseAction("Upgrade".styled(self))(upgrade./(u => "Place on" ~ u.elem).|("Skip")) with ThiefAction
 
 // KNIGHT
 trait KnightTurnQuestion extends FactionAction with NoClear { a : UserAction =>

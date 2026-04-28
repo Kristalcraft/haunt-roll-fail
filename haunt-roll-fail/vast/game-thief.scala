@@ -87,6 +87,8 @@ trait GameThiefSupport { self : Game =>
         f.actionCubes = f.thievery
         f.targeted = $
         f.path = $
+        f.usedStickyFingers = false
+        f.usedEvasion = false
         logThiefMarker("turn", "BLOCK_THIEF_TURN", "movement=" + f.movement + " stealth=" + f.stealth + " thievery=" + f.thievery + " carried=" + f.carried.num + " stashed=" + f.stashed)
         ThiefTurnAction(f)
     }
@@ -128,6 +130,14 @@ trait GameThiefSupport { self : Game =>
                     .!(f.moves >= f.movement, "no movement")
                     .!(cell == Emptiness, "empty")
                     .!(board.wall(f.position, dir), "wall")
+
+                // Climb through wall
+                if (board.wall(f.position, dir) && cell != Emptiness) {
+                    val climbCost = if (f.upgrades.has(ClimbingGear)) 1 else 2
+                    + ThiefClimbAction(f, dir, climbCost, cell.is[HiddenTile])
+                        .!(f.moves >= f.movement, "no movement")
+                        .!(f.actionCubes < climbCost, "no action cubes")
+                }
             }
         }
 
@@ -189,7 +199,7 @@ trait GameThiefSupport { self : Game =>
             ThiefTurnAction(f)
     }
 
-    protected def resolveThiefLootRoll(f : Thief.type, t : Token, x : Pattern) : ForcedAction = {
+    protected def resolveThiefLootRoll(f : Thief.type, t : Token, x : Pattern) : Continue = {
         implicit val g : Game = this
 
         f.log("rolled", x, dt.Pattern(x))
@@ -210,14 +220,14 @@ trait GameThiefSupport { self : Game =>
         if (cubes >= 3) pickLockThiefSuccess(f) else Random(Pattern.die, ThiefPickLockRollAction(f, cubes, _))
     }
 
-    protected def resolveThiefPickLockRoll(f : Thief.type, cubes : Int, x : Pattern) : ForcedAction = {
+    protected def resolveThiefPickLockRoll(f : Thief.type, cubes : Int, x : Pattern) : Continue = {
         implicit val g : Game = this
 
         f.log("rolled", x, dt.Pattern(x))
         if (thiefRollSuccess(cubes, x)) pickLockThiefSuccess(f) else { f.log("failed to pick", Vault); ThiefTurnAction(f) }
     }
 
-    protected def pickLockThiefSuccess(f : Thief.type) : ForcedAction = {
+    protected def pickLockThiefSuccess(f : Thief.type) : Continue = {
         implicit val g : Game = this
 
         board.remove(f.position, Vault)
@@ -227,17 +237,61 @@ trait GameThiefSupport { self : Game =>
         if (f.position == board.entrance) stashThiefLoot(f) else ThiefTurnAction(f)
     }
 
-    protected def stashThiefLoot(f : Thief.type) : ForcedAction = {
+    protected def stashThiefLoot(f : Thief.type) : Continue = {
         implicit val g : Game = this
 
         val n = f.carried.num
-        f.carried.foreach { case DragonGem(d, power) => d.gems :-= power; case _ => }
+        f.carried.foreach { case DragonGem(d, power) => d.gems :-= power ; case _ => }
         f.carried = $
         f.stashed += n
         f.lootDrop = 3
         f.log("stashed", n.hl, "Treasure".s(n).styled(f))
         logThiefMarker("loot", "BLOCK_THIEF_LOOT_STASH", "stashed=" + f.stashed)
-        if (f.stashed >= 6) GameOverAction($(f)) else ThiefTurnAction(f)
+
+        if (f.stashed >= 6)
+            GameOverAction($(f))
+        else
+            chooseUpgrade(f)
+    }
+
+    protected def chooseUpgrade(f : Thief.type) : Continue = {
+        implicit val g : Game = this
+        implicit val ask = builder
+
+        val specials = $(LockPickingKit, ClimbingGear, HandCrossbow, StickyFingers, UnnaturalEvasion).diff(f.upgrades)
+        val stats = $("Movement", "Stealth", "Thievery")./(StatBoost).%( {
+            case StatBoost("Movement") => f.movement < 5
+            case StatBoost("Stealth")  => f.stealth < 5
+            case StatBoost("Thievery") => f.thievery < 5
+            case _ => false
+        })
+        val available = specials ++ stats
+
+        if (available.any && f.stashed > f.upgrades.num) {
+            available.foreach(u => + ThiefStashChoiceAction(f, Some(u)))
+            + ThiefStashChoiceAction(f, None)
+            ask(f).needOk
+        }
+        else
+            ThiefTurnAction(f)
+    }
+
+    protected def applyUpgrade(f : Thief.type, upgrade : |[ThiefUpgrade]) : ForcedAction = {
+        implicit val g : Game = this
+
+        upgrade match {
+            case None => ThiefTurnAction(f)
+            case Some(u) =>
+                f.upgrades :+= u
+                f.log("gained upgrade", u)
+                u match {
+                    case StatBoost("Movement") => f.movement += 1
+                    case StatBoost("Stealth")  => f.stealth += 1
+                    case StatBoost("Thievery") => f.thievery += 1
+                    case _ =>
+                }
+                ThiefTurnAction(f)
+        }
     }
 
     protected def killThief(f : Thief.type, then : ForcedAction) : ForcedAction = {
@@ -351,6 +405,14 @@ trait GameThiefSupport { self : Game =>
         ThiefTurnAction(f)
     }
 
+    protected def climbThief(f : Thief.type, dir : Bearing, cubes : Int) : Continue = {
+        implicit val g : Game = this
+
+        spendThiefCubes(f, cubes)
+        f.log("climbed", dir, "for", cubes.hl, "cube".s(cubes))
+        moveThief(f, dir)
+    }
+
     protected def performThief(a : ThiefAction) : Continue = a match {
         case ThiefAssignStatsAction(f, movement, stealth, thievery) => assignThiefStats(f, movement, stealth, thievery)
         case ThiefMoveAction(f, dir, _) => moveThief(f, dir)
@@ -363,6 +425,8 @@ trait GameThiefSupport { self : Game =>
         case ThiefPickpocketAction(f, target, cubes) => pickpocketThief(f, target, cubes)
         case ThiefPickpocketRollAction(f, target, cubes, x) => resolveThiefPickpocketRoll(f, target, cubes, x)
         case ThiefBackstabAction(f, target : Faction, cubes) => backstabThief(f, target, cubes)
+        case ThiefClimbAction(f, dir, cubes, _) => climbThief(f, dir, cubes)
+        case ThiefStashChoiceAction(f, upgrade) => applyUpgrade(f, upgrade)
         case _ => ThiefTurnAction(Thief)
     }
 

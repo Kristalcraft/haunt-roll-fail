@@ -302,7 +302,8 @@ class UI(val uir : ElementAttachmentPoint, arity : Int, val resources : Resource
                 ("Move " ~ (f.movement - f.moves).hl ~ "/" ~ f.movement.hh ~ " | ".hh ~ "Stealth " ~ f.effectiveStealth.hl ~ "/" ~ f.stealth.hh).div ~
                 ("Thievery " ~ f.thievery.hl ~ " | ".hh ~ "Action cubes " ~ f.actionCubes.hl).div ~
                 ("Carried " ~ f.carried.num.hl ~ " | ".hh ~ "Stashed " ~ f.stashed.hl ~ "/" ~ 6.hh).div ~
-                ("Loot Drop " ~ f.lootDrop.hl).div
+                ("Loot Drop " ~ f.lootDrop.hl).div ~
+                f.upgrades.any.?(("Upgrades: ".hh ~ f.upgrades./(_.elem).join(", ".hh)).div)
 
             case _ => Empty
         }
