@@ -450,6 +450,7 @@ object Meta extends MetaGame {
         ImageAsset("thief-skill-4") ::
     $) ::
     ConditionalAssetsList((factions : $[Faction], options : $[O]) => factions.has(Thief), "figures")(
+        ImageAsset("thief") ::
         ImageAsset("vault-token") ::
     $) ::
     $

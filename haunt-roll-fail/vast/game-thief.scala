@@ -91,13 +91,8 @@ trait GameThiefSupport { self : Game =>
             f.log("respawned at", Entrance)
         }
 
-        if (f.statsAssigned.not) {
-            f.movement = 2
-            f.stealth = 3
-            f.thievery = 4
-            f.statsAssigned = true
-        }
-        f.actionCubes = f.thievery
+        f.statsAssigned = false
+        f.actionCubes = 0
         f.targeted = $
         f.path = $
         f.usedStickyFingers = false
@@ -168,12 +163,15 @@ trait GameThiefSupport { self : Game =>
     protected def assignThiefStats(f : Thief.type, movement : Int, stealth : Int, thievery : Int) : ForcedAction = {
         implicit val g : Game = this
 
-        f.movement = movement
-        f.stealth = stealth
-        f.thievery = thievery
+        val moveBonus = f.upgrades.count(StatBoost("Movement"))
+        val stealthBonus = f.upgrades.count(StatBoost("Stealth"))
+        val thieveryBonus = f.upgrades.count(StatBoost("Thievery"))
+        f.movement = movement + moveBonus
+        f.stealth = stealth + stealthBonus
+        f.thievery = thievery + thieveryBonus
         f.statsAssigned = true
-        f.actionCubes = thievery
-        f.log("assigned stats", "Movement".hh, movement.hl, "Stealth".hh, stealth.hl, "Thievery".hh, thievery.hl)
+        f.actionCubes = f.thievery
+        f.log("assigned stats", "Movement".hh, f.movement.hl, "Stealth".hh, f.stealth.hl, "Thievery".hh, f.thievery.hl)
         ThiefTurnAction(f)
     }
 
