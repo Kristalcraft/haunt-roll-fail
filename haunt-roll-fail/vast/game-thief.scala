@@ -116,6 +116,11 @@ trait GameThiefSupport { self : Game =>
                     1.to(min(f.actionCubes, 3)).foreach(cubes => + ThiefPickpocketAction(f, target, cubes))
             }
 
+            factions.but(f).but(Cave).foreach { target =>
+                if (canTargetThief(f, target) && sameSpace(f, target) && f.targeted.has(target).not)
+                    1.to(min(f.actionCubes, 3)).foreach(cubes => + ThiefBackstabAction(f, target, cubes))
+            }
+
             Bearings.wnes.foreach { dir =>
                 val dest = f.position.add(dir)
                 val cell = board.get(dest)
@@ -315,6 +320,37 @@ trait GameThiefSupport { self : Game =>
         ThiefTurnAction(f)
     }
 
+    protected def backstabThief(f : Thief.type, target : Faction, cubes : Int) : ForcedAction = {
+        implicit val g : Game = this
+
+        spendThiefCubes(f, cubes)
+        f.targeted :+= target
+
+        target match {
+            case e : Knight.type =>
+                val damage = cubes match { case 1 => 1 ; case 2 => 3 ; case _ => 5 }
+                e.grit = max(0, e.grit - damage)
+                f.log("backstabbed", e, "for", damage.hl, "Grit")
+
+            case e : Goblins.type =>
+                val damage = cubes match { case 1 => 1 ; case 2 => 2 ; case _ => 3 }
+                e.tribes.sortBy(-_.population).take(1).foreach { t =>
+                    t.population = max(0, t.population - damage)
+                }
+                f.log("backstabbed", e, "for", damage.hl, "Population")
+
+            case e : Dragon.type =>
+                val discard = cubes match { case 1 => 1 ; case 2 => 2 ; case _ => 3 }
+                val discarded = e.powers.of[PowerCard].shuffle.take(discard)
+                discarded.foreach(c => e.powers :-= c)
+                f.log("backstabbed", e, ", discarded", discard.hl, "Power card".s(discard))
+
+            case _ =>
+        }
+
+        ThiefTurnAction(f)
+    }
+
     protected def performThief(a : ThiefAction) : Continue = a match {
         case ThiefAssignStatsAction(f, movement, stealth, thievery) => assignThiefStats(f, movement, stealth, thievery)
         case ThiefMoveAction(f, dir, _) => moveThief(f, dir)
@@ -326,6 +362,7 @@ trait GameThiefSupport { self : Game =>
         case ThiefHideLootAction(f, cubes) => hideLootThief(f, cubes)
         case ThiefPickpocketAction(f, target, cubes) => pickpocketThief(f, target, cubes)
         case ThiefPickpocketRollAction(f, target, cubes, x) => resolveThiefPickpocketRoll(f, target, cubes, x)
+        case ThiefBackstabAction(f, target : Faction, cubes) => backstabThief(f, target, cubes)
         case _ => ThiefTurnAction(Thief)
     }
 
