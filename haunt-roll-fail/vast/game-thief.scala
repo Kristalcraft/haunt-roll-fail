@@ -33,6 +33,28 @@ trait GameThiefSupport { self : Game =>
     protected def logThiefMarker(scope : String, block : String, message : String) : Unit =
         +++("[VastThief][" + scope + "][" + block + "] " + message)
 
+    protected def canTargetThief(f : Thief.type, target : Faction) : Boolean = {
+        implicit val g : Game = this
+        target match {
+            case e : Knight.type  => f.effectiveStealth > e.perception
+            case e : Goblins.type => f.effectiveStealth > e.tribes./(_.population).sum + 1
+            case e : Dragon.type  => f.effectiveStealth > e.armor
+            case _ : Cave.type    => true
+            case _                => false
+        }
+    }
+
+    protected def sameSpace(f : Thief.type, target : Faction) : Boolean = {
+        implicit val g : Game = this
+        target match {
+            case e : Knight.type  => e.position == f.position
+            case e : Goblins.type => e.tribes.exists(_.position.has(f.position))
+            case e : Dragon.type  => e.position.has(f.position)
+            case _ : Cave.type    => true
+            case _                => false
+        }
+    }
+
     protected def setupThief(f : Thief.type) : ForcedAction = {
         implicit val g : Game = this
 
@@ -74,6 +96,9 @@ trait GameThiefSupport { self : Game =>
             }
             if (board.list(f.position).has(Vault))
                 1.to(3).foreach(cubes => + ThiefPickLockAction(f, cubes).!(f.actionCubes < cubes, "no action cubes"))
+
+            if (f.lootDrop > 0 && f.actionCubes > 0)
+                1.to(min(f.actionCubes, f.lootDrop)).foreach(cubes => + ThiefHideLootAction(f, cubes))
 
             Bearings.wnes.foreach { dir =>
                 val dest = f.position.add(dir)
@@ -205,6 +230,15 @@ trait GameThiefSupport { self : Game =>
         then
     }
 
+    protected def hideLootThief(f : Thief.type, cubes : Int) : ForcedAction = {
+        implicit val g : Game = this
+
+        spendThiefCubes(f, cubes)
+        f.lootDrop = max(0, f.lootDrop - cubes)
+        f.log("hid loot, drop level now", f.lootDrop.hl)
+        ThiefTurnAction(f)
+    }
+
     protected def performThief(a : ThiefAction) : Continue = a match {
         case ThiefAssignStatsAction(f, movement, stealth, thievery) => assignThiefStats(f, movement, stealth, thievery)
         case ThiefMoveAction(f, dir, _) => moveThief(f, dir)
@@ -213,6 +247,7 @@ trait GameThiefSupport { self : Game =>
         case ThiefLootRollAction(f, t, x) => resolveThiefLootRoll(f, t, x)
         case ThiefPickLockAction(f, cubes) => pickLockThief(f, cubes)
         case ThiefPickLockRollAction(f, cubes, x) => resolveThiefPickLockRoll(f, cubes, x)
+        case ThiefHideLootAction(f, cubes) => hideLootThief(f, cubes)
         case _ => ThiefTurnAction(Thief)
     }
 

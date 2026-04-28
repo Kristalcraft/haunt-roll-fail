@@ -1199,6 +1199,7 @@ case class ThiefPickLockRollAction(f : Thief.type, cubes : Int, random : Pattern
 case class ThiefPickpocketAction(self : Thief.type, target : Faction, cubes : Int) extends BaseAction("Pickpocket".styled(self))(target, cubes.hl, "cube".s(cubes).hl) with ThiefAction
 case class ThiefPickpocketRollAction(f : Thief.type, target : Faction, cubes : Int, random : Pattern) extends RandomAction[Pattern] with ThiefAction
 case class ThiefBackstabAction(self : Thief.type, target : AttackTarget, cubes : Int) extends BaseAction("Backstab".styled(self))(target, cubes.hl, "cube".s(cubes).hl) with ThiefAction
+case class ThiefHideLootAction(self : Thief.type, cubes : Int) extends BaseAction("Hide Loot".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, "reduce Loot Drop") with ThiefAction
 
 // KNIGHT
 trait KnightTurnQuestion extends FactionAction with NoClear { a : UserAction =>
