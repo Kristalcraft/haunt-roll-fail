@@ -1117,6 +1117,7 @@ case class StatBoost(stat : String) extends ThiefUpgrade { def elem = ("+1 " + s
 
 class ThiefPlayer(val game : Game, val faction : Thief.type) extends Player {
     var position = Relative(0, 0)
+    var placed = false
     var statsAssigned = false
     var movement = 0
     var stealth = 0

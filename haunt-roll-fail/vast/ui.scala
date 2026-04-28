@@ -225,7 +225,7 @@ class UI(val uir : ElementAttachmentPoint, arity : Int, val resources : Resource
                             }
                         }
                     }
-                case f : Thief.type if w == 0 && game.states.contains(f) && f.dead.not =>
+                case f : Thief.type if w == 0 && game.states.contains(f) && f.placed && f.dead.not =>
                     val p = f.position
                     val pk = highlightPeekTile.has(p).?(0.5).|(1.0)
                     background.add(Sprite($(ImageRect(new RawImage(resources.images.get("thief")), Rectangle((p.x + game.board.center.x) * 308, (p.y + game.board.center.y) * 308, 308, 308), 1.0 * pk)), $))(0, 0)

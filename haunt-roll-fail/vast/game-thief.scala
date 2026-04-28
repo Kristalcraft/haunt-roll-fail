@@ -77,15 +77,18 @@ trait GameThiefSupport { self : Game =>
         implicit val g : Game = this
 
         states += f -> new ThiefPlayer(this, f)
-        f.position = board.entrance
-        f.log("started at the", Entrance)
         SetupNextAction
     }
 
     protected def startThiefTurn(f : Thief.type) : ForcedAction = {
         implicit val g : Game = this
 
-        if (f.dead) {
+        if (f.placed.not) {
+            f.placed = true
+            f.position = board.entrance
+            f.log("entered the cave at", Entrance)
+        }
+        else if (f.dead) {
             f.dead = false
             f.position = board.entrance
             f.log("respawned at", Entrance)
