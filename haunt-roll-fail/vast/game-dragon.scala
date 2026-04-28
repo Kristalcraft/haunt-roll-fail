@@ -262,7 +262,7 @@ trait GameDragonSupport { self : Game =>
             case DragonAttackAction(f, x) =>
                 val l = board.pattern(f.position.get, x)
 
-                val t : $[AttackTarget] = factions.of[Goblins.type]./~(_.tribes.%(_.position.exists(l.has))./(_.tribe)) ++ factions.of[Knight.type].%(_.position.use(l.has))
+                val t : $[AttackTarget] = factions.of[Goblins.type]./~(_.tribes.%(_.position.exists(l.has))./(_.tribe)) ++ factions.of[Knight.type].%(_.position.use(l.has)) ++ factions.of[Thief.type].%(e => l.has(e.position) && e.dead.not)
 
                 if (t.none)
                     f.log("hit nothing")
@@ -303,6 +303,10 @@ trait GameDragonSupport { self : Game =>
 
                     then
                 }
+
+            case DragonAttackTargetAction(f, t : Thief.type, then) =>
+                f.log("attacked", t)
+                tryEvasion(t, f, then, killThief(t, then, Some(f)))
 
             // HISS
             case DragonHissMainAction(f, c) =>

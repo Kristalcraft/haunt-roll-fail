@@ -297,6 +297,9 @@ trait GameGoblinsSupport { self : Game =>
                     log(t, "could not attack")
                 }
 
+            case TribeTurnAction(f, t) if factions.of[Thief.type].exists(e => f.tribe(t).position.has(e.position) && e.dead.not) =>
+                Ask(f).each(factions.of[Thief.type].%(e => f.tribe(t).position.has(e.position) && e.dead.not))(e => GoblinsAttackAction(f, t, e, DoneTribeAction(f, t)).as("Attack".styled(styles.hit), e)).done(DoneTribeAction(f, t))
+
             case TribeTurnAction(f, t) => (() => {
                 implicit val ask = builder
 
@@ -316,6 +319,7 @@ trait GameGoblinsSupport { self : Game =>
                     val move = board.get(dest) != Emptiness
 
                     val attack = factions.of[Knight.type].%(_.position == dest)
+                    val attackThief = factions.of[Thief.type].%(e => e.position == dest && e.dead.not)
 
                     val burn = board.list(dest).of[FlameWall].any
 
@@ -331,6 +335,9 @@ trait GameGoblinsSupport { self : Game =>
                         if (attack.any)
                             GoblinsMoveAttackAction(f, t, dir, reduce, GoblinsAttackAction(f, t, attack(0), DoneTribeAction(f, t)))
                         else
+                        if (attackThief.any)
+                            GoblinsMoveAttackAction(f, t, dir, reduce, GoblinsAttackAction(f, t, attackThief(0), DoneTribeAction(f, t)))
+                        else
                         if (explore)
                             GoblinsMoveExploreAction(f, t, dir, reduce, GoblinsExploreAction(f, t, DoneTribeAction(f, t)))
                         else
@@ -340,6 +347,7 @@ trait GameGoblinsSupport { self : Game =>
                         .!(wall && f.tribe(t).monsters.has(Golem).not, "wall")
                         .!(attack.any && f.tribe(t).strength <= Knight.strength, "not enough strength")
                         .!(unlurk && attack.any)
+                        .!(unlurk && attackThief.any)
                         .!(unlurk && explore)
                         .!(explore.not && move.not)
                 }
@@ -496,6 +504,17 @@ trait GameGoblinsSupport { self : Game =>
                         else
                             Ask(f).add(q.as("No Poison"))
                     }
+                }
+
+            case GoblinsAttackAction(f, t, e : Thief.type, then) =>
+                if (f.tribe(t).position.has(e.position).not) {
+                    f.tribe(t).position = Some(e.position)
+                    log(t, "attacked", e)
+                    Ask(f).add(GoblinsAttackAction(f, t, e, then).as("Attack".styled(styles.hit))("Target", e))
+                }
+                else {
+                    log(t, "attacked", e)
+                    tryEvasion(e, f, then, killThief(e, then, Some(f)))
                 }
 
             case ApplyPoisonAction(f, e, d, then) =>

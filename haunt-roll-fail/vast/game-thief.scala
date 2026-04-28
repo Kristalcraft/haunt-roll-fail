@@ -52,6 +52,16 @@ trait GameThiefSupport { self : Game =>
         }
     }
 
+    protected def withinRange(f : Thief.type, target : Faction, range : Int) : Boolean = {
+        implicit val g : Game = this
+        target match {
+            case e : Knight.type  => f.position.dist(e.position) <= range
+            case e : Dragon.type  => e.position.exists(p => f.position.dist(p) <= range)
+            case e : Goblins.type => e.tribes.exists(_.position.exists(p => f.position.dist(p) <= range))
+            case _ => false
+        }
+    }
+
     protected def canPickpocket(f : Thief.type, target : Faction) : Boolean = {
         implicit val g : Game = this
         target match {
@@ -122,7 +132,8 @@ trait GameThiefSupport { self : Game =>
             }
 
             factions.but(f).but(Cave).foreach { target =>
-                if (canTargetThief(f, target) && sameSpace(f, target) && f.targeted.has(target).not)
+                val inRange = sameSpace(f, target) || (f.upgrades.has(HandCrossbow) && withinRange(f, target, 3))
+                if (canTargetThief(f, target) && inRange && f.targeted.has(target).not)
                     1.to(min(f.actionCubes, 3)).foreach(cubes => + ThiefBackstabAction(f, target, cubes))
             }
 
@@ -347,12 +358,17 @@ trait GameThiefSupport { self : Game =>
             Random(Pattern.die, ThiefPickpocketRollAction(f, target, cubes, _))
     }
 
-    protected def resolveThiefPickpocketRoll(f : Thief.type, target : Faction, cubes : Int, x : Pattern) : ForcedAction = {
+    protected def resolveThiefPickpocketRoll(f : Thief.type, target : Faction, cubes : Int, x : Pattern) : Continue = {
         implicit val g : Game = this
 
         f.log("rolled", x, dt.Pattern(x))
         if (thiefRollSuccess(cubes, x))
             pickpocketThiefSuccess(f, target)
+        else if (f.upgrades.has(StickyFingers) && f.usedStickyFingers.not) {
+            f.usedStickyFingers = true
+            f.log("used Sticky Fingers to reroll")
+            Random(Pattern.die, ThiefPickpocketRollAction(f, target, cubes, _))
+        }
         else {
             f.log("failed to pickpocket", target)
             ThiefTurnAction(f)
@@ -364,6 +380,8 @@ trait GameThiefSupport { self : Game =>
 
         target match {
             case e : Cave.type =>
+                // Treasure shortage: if Cave supply is empty, Thief may take from anywhere on map (rules/thief.xml)
+                // Current implementation creates tokens directly; shortage handling deferred to explicit Cave supply tracking
                 f.carried :+= Chest
                 f.log("stole", Chest, "from", e)
 
