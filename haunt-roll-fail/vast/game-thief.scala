@@ -55,6 +55,17 @@ trait GameThiefSupport { self : Game =>
         }
     }
 
+    protected def canPickpocket(f : Thief.type, target : Faction) : Boolean = {
+        implicit val g : Game = this
+        target match {
+            case e : Knight.type  => e.stash.any
+            case e : Goblins.type => e.hand.any
+            case e : Dragon.type  => e.greed.available
+            case _ : Cave.type    => true
+            case _                => false
+        }
+    }
+
     protected def setupThief(f : Thief.type) : ForcedAction = {
         implicit val g : Game = this
 
@@ -99,6 +110,11 @@ trait GameThiefSupport { self : Game =>
 
             if (f.lootDrop > 0 && f.actionCubes > 0)
                 1.to(min(f.actionCubes, f.lootDrop)).foreach(cubes => + ThiefHideLootAction(f, cubes))
+
+            factions.but(f).foreach { target =>
+                if (canTargetThief(f, target) && sameSpace(f, target) && canPickpocket(f, target) && f.targeted.has(target).not)
+                    1.to(min(f.actionCubes, 3)).foreach(cubes => + ThiefPickpocketAction(f, target, cubes))
+            }
 
             Bearings.wnes.foreach { dir =>
                 val dest = f.position.add(dir)
@@ -239,6 +255,66 @@ trait GameThiefSupport { self : Game =>
         ThiefTurnAction(f)
     }
 
+    protected def pickpocketThief(f : Thief.type, target : Faction, cubes : Int) : Continue = {
+        implicit val g : Game = this
+
+        spendThiefCubes(f, cubes)
+        f.targeted :+= target
+        f.log("attempted to pickpocket", target)
+
+        if (cubes >= 3)
+            pickpocketThiefSuccess(f, target)
+        else
+            Random(Pattern.die, ThiefPickpocketRollAction(f, target, cubes, _))
+    }
+
+    protected def resolveThiefPickpocketRoll(f : Thief.type, target : Faction, cubes : Int, x : Pattern) : ForcedAction = {
+        implicit val g : Game = this
+
+        f.log("rolled", x, dt.Pattern(x))
+        if (thiefRollSuccess(cubes, x))
+            pickpocketThiefSuccess(f, target)
+        else {
+            f.log("failed to pickpocket", target)
+            ThiefTurnAction(f)
+        }
+    }
+
+    protected def pickpocketThiefSuccess(f : Thief.type, target : Faction) : ForcedAction = {
+        implicit val g : Game = this
+
+        target match {
+            case e : Cave.type =>
+                f.carried :+= Chest
+                f.log("stole", Chest, "from", e)
+
+            case e : Knight.type =>
+                e.stash.shuffle.starting.foreach { t =>
+                    e.stash :-= t
+                    f.carried :+= Chest
+                    f.log("stole a treasure from", e)
+                }
+
+            case e : Goblins.type =>
+                e.hand.shuffle.starting.foreach { s =>
+                    e.hand :-= s
+                    f.log("stole a secret from", e)
+                }
+
+            case e : Dragon.type =>
+                if (e.greed.available) {
+                    e.greed.reduce()
+                    e.wakefulness += 1
+                    f.log("moved Sloth to Greed on", e)
+                }
+
+            case _ =>
+        }
+
+        logThiefMarker("loot", "BLOCK_THIEF_LOOT_STASH", "pickpocket=" + target.short + " carried=" + f.carried.num)
+        ThiefTurnAction(f)
+    }
+
     protected def performThief(a : ThiefAction) : Continue = a match {
         case ThiefAssignStatsAction(f, movement, stealth, thievery) => assignThiefStats(f, movement, stealth, thievery)
         case ThiefMoveAction(f, dir, _) => moveThief(f, dir)
@@ -248,6 +324,8 @@ trait GameThiefSupport { self : Game =>
         case ThiefPickLockAction(f, cubes) => pickLockThief(f, cubes)
         case ThiefPickLockRollAction(f, cubes, x) => resolveThiefPickLockRoll(f, cubes, x)
         case ThiefHideLootAction(f, cubes) => hideLootThief(f, cubes)
+        case ThiefPickpocketAction(f, target, cubes) => pickpocketThief(f, target, cubes)
+        case ThiefPickpocketRollAction(f, target, cubes, x) => resolveThiefPickpocketRoll(f, target, cubes, x)
         case _ => ThiefTurnAction(Thief)
     }
 
