@@ -78,6 +78,12 @@ trait GameThiefSupport { self : Game =>
     protected def startThiefTurn(f : Thief.type) : ForcedAction = {
         implicit val g : Game = this
 
+        if (f.dead) {
+            f.dead = false
+            f.position = board.entrance
+            f.log("respawned at", Entrance)
+        }
+
         if (f.statsAssigned.not) {
             f.movement = 2
             f.stealth = 3
@@ -294,14 +300,31 @@ trait GameThiefSupport { self : Game =>
         }
     }
 
-    protected def killThief(f : Thief.type, then : ForcedAction) : ForcedAction = {
+    protected def killThief(f : Thief.type, then : ForcedAction, killer : |[Faction] = None) : ForcedAction = {
         implicit val g : Game = this
 
         f.carried.foreach(board.place(f.position, _))
         f.carried = $
-        f.position = board.entrance
+        f.dead = true
         f.actionCubes = 0
         f.log("was killed")
+
+        killer.foreach { k =>
+            val reward = f.lootDrop
+            k match {
+                case e : Knight.type =>
+                    e.grit += reward
+                    e.log("gained", reward.hl, "Grit from killing", f)
+                case e : Goblins.type =>
+                    e.rage += reward
+                    e.log("gained", reward.hl, "Rage from killing", f)
+                case e : Dragon.type =>
+                    1.to(reward).foreach(_ => e.powers.of[PowerCard].shuffle.starting.foreach(c => {}))
+                    e.log("gained Power cards from killing", f)
+                case _ =>
+            }
+        }
+
         then
     }
 
