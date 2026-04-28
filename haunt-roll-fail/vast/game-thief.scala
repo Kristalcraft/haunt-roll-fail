@@ -413,6 +413,29 @@ trait GameThiefSupport { self : Game =>
         moveThief(f, dir)
     }
 
+    protected def tryEvasion(f : Thief.type, attacker : Faction, then : ForcedAction, onFail : ForcedAction) : Continue = {
+        implicit val g : Game = this
+
+        if (f.upgrades.has(UnnaturalEvasion) && f.usedEvasion.not) {
+            f.usedEvasion = true
+            Random(Pattern.die, ThiefEvasionRollAction(f, attacker, then, _))
+        }
+        else
+            onFail
+    }
+
+    protected def resolveEvasionRoll(f : Thief.type, attacker : Faction, then : ForcedAction, x : Pattern) : Continue = {
+        implicit val g : Game = this
+
+        f.log("evasion roll", x, dt.Pattern(x))
+        if (thiefRollSuccess(1, x)) {
+            f.log("evaded attack from", attacker)
+            then
+        }
+        else
+            killThief(f, then)
+    }
+
     protected def performThief(a : ThiefAction) : Continue = a match {
         case ThiefAssignStatsAction(f, movement, stealth, thievery) => assignThiefStats(f, movement, stealth, thievery)
         case ThiefMoveAction(f, dir, _) => moveThief(f, dir)
@@ -427,6 +450,7 @@ trait GameThiefSupport { self : Game =>
         case ThiefBackstabAction(f, target : Faction, cubes) => backstabThief(f, target, cubes)
         case ThiefClimbAction(f, dir, cubes, _) => climbThief(f, dir, cubes)
         case ThiefStashChoiceAction(f, upgrade) => applyUpgrade(f, upgrade)
+        case ThiefEvasionRollAction(f, attacker, then, x) => resolveEvasionRoll(f, attacker, then, x)
         case _ => ThiefTurnAction(Thief)
     }
 

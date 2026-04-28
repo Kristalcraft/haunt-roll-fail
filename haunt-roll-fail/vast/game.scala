@@ -1214,6 +1214,7 @@ case class ThiefBackstabAction(self : Thief.type, target : AttackTarget, cubes :
 case class ThiefHideLootAction(self : Thief.type, cubes : Int) extends BaseAction("Hide Loot".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, "reduce Loot Drop") with ThiefAction
 case class ThiefClimbAction(self : Thief.type, direction : Bearing, cubes : Int, dark : Boolean) extends BaseAction("Climb".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, "Move", direction.elem ~ (direction.dy == 0).?(" ".txt), dark.?("Dark".hl)) with MoveAction with ThiefAction
 case class ThiefStashChoiceAction(self : Thief.type, upgrade : |[ThiefUpgrade]) extends BaseAction("Upgrade".styled(self))(upgrade./(u => "Place on" ~ u.elem).|("Skip")) with ThiefAction
+case class ThiefEvasionRollAction(f : Thief.type, attacker : Faction, then : ForcedAction, random : Pattern) extends RandomAction[Pattern] with ThiefAction
 
 // KNIGHT
 trait KnightTurnQuestion extends FactionAction with NoClear { a : UserAction =>

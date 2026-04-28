@@ -222,9 +222,7 @@ trait GameGoblinsSupport { self : Game =>
                         factions.of[Knight.type]./~(e => f.tribes.%(_.population > 0).%(_.activated.not).%(_.raw > e.strength).%(_.hidden)./(t =>
                             UseSecretAction(f, |(t.tribe), HidingSpots, GoblinsAttackAction(f, t.tribe, e, DoneTribeAction(f, t.tribe))).as("Use", HidingSpots, "to attack", e, "with", t.tribe)
                         ))
-                    // Thief is filtered until cross-faction Thief effects are extracted from performInternal;
-                    // adding a HexAction(... Thief ...) case directly currently risks the JVM Method-too-large limit.
-                    case Hex => factions.but(f).but(Thief)./(e => UseSecretAction(f, None, Hex, HexAction(f, e, GoblinsTopAction(f))).as("Use", Hex, "on", e).!(f.eye.population < 1))
+                    case Hex => factions.but(f)./(e => UseSecretAction(f, None, Hex, HexAction(f, e, GoblinsTopAction(f))).as("Use", Hex, "on", e).!(f.eye.population < 1))
                     case CaveIn => $(UseSecretAction(f, None, CaveIn, CaveInMainAction(f, GoblinsTopAction(f))).as("Use", CaveIn).!(f.eye.population < 1))
                     case GoblinRuby => $(RevealSecretAction(f, GoblinRuby, GoblinsTopAction(f)).as("Reveal", GoblinRuby))
                     case Trap => $(RevealSecretAction(f, Trap, GoblinsTopAction(f)).as("Reveal", Trap))
@@ -730,6 +728,12 @@ trait GameGoblinsSupport { self : Game =>
                 f.log("targeted", e)
 
                 CaveDiscardOmensMainAction(e, f.eye.population, then)
+
+            case HexAction(f, e : Thief.type, then) =>
+                f.log("targeted", e)
+                e.lootDrop = max(0, e.lootDrop - f.eye.population)
+                e.log("loot drop reduced to", e.lootDrop.hl, "by Hex")
+                then
 
             case CaveDiscardOmensMainAction(f, n, then) if f.omens.none =>
                 Ask(f).add(then.as("No omens to discard"))

@@ -86,9 +86,7 @@ trait GameCaveTailSupport { self : Game =>
                                 .!(p.num > n, "too many")
                                 .!(p.but(Boulder).but(Quartz).but(Mushroom).any, "composition")
                         } ++
-                        // Thief is filtered until Cave cross-faction effects are extracted from performInternal;
-                        // direct SoporificSporesMainAction(... Thief ...) handling exceeded the method bytecode budget.
-                        factions.but(f).but(Thief)./(e =>
+                        factions.but(f)./(e =>
                             SoporificSporesMainAction(f, e, c).as(3.hl, "X", omens(Quartz, Mushroom, Trail), "Soporific Spores".hh, MDash, "Hurt", e)
                                 .!(p.num < 3)
                                 .!(p.num > 3, "too many")
@@ -283,6 +281,23 @@ trait GameCaveTailSupport { self : Game =>
                 Ask(e).each(e.tracks)(t => ReturnSlothAction(e, t.track, CaveMainAction(f)).as("Return", "Sloth".styled(styles.sloth), "to", t.track)("Soporofic Spores".styled(Cave)).!(t.value >= t.track.max)).bailw(CaveMainAction(f)) {
                     e.log("could not return", "Sloth".styled(styles.sloth))
                 }
+
+            case SoporificSporesMainAction(f, e : Thief.type, c) =>
+                f.omens = f.omens.diff(c)
+
+                f.log("used", c.comma, "to send", "Soporific Spores".styled(f))
+
+                f.log("sent", "Soporofic Spores".styled(Cave), "on", e)
+
+                if (e.upgrades.any) {
+                    val removed = e.upgrades.shuffle(0)
+                    e.upgrades :-= removed
+                    e.log("lost upgrade", removed, "to Soporific Spores")
+                }
+                else
+                    e.log("had no upgrades to lose")
+
+                CaveMainAction(f)
 
             case ReturnSlothAction(f, t, then) =>
                 f.tracks.%(_.track == t).foreach { _.value += 1 }
