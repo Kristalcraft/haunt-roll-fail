@@ -1,8 +1,8 @@
 // FILE: vast/game-thief.scala
-// VERSION: 0.1.1
+// VERSION: 1.0.0
 // START_MODULE_CONTRACT
-// PURPOSE: Isolate the partial Thief/5p runtime support from the monolithic Vast action dispatcher.
-// SCOPE: Own Thief setup helpers, basic turn flow, movement, Loot/Pick Lock, carried/stashed loot, and Thief verification markers.
+// PURPOSE: Own all Thief fifth-player runtime support: setup, turn flow, actions, upgrades, cross-faction targeting, death/respawn.
+// SCOPE: Stealth targeting, Pickpocket, Backstab, Hide Loot, Climb, upgrade board, Unnatural Evasion, death rewards, and Thief verification markers.
 // DEPENDS: vast.game, vast.rules(thief), hrf.base, hrf.logger, hrf.ui
 // LINKS: M-VAST-THIEF-SUPPORT, M-VAST-GAME, M-VAST-RULES, M-VAST-UI, M-VAST-HOST, V-M-VAST-THIEF-SUPPORT
 // ROLE: RUNTIME
@@ -10,11 +10,11 @@
 // END_MODULE_CONTRACT
 //
 // START_MODULE_MAP
-// GameThiefSupport - helper dispatch and state transitions for the current partial Thief checkpoint
+// GameThiefSupport - complete Thief faction dispatch: setup, targeting, actions, upgrades, evasion, death/respawn
 // END_MODULE_MAP
 //
 // START_CHANGE_SUMMARY
-// LAST_CHANGE: v0.1.1 - `thiefCaveTailDispatchPart3` bridges Thief cases in `Game.caveTailPart3` chain (Cave→Thief→Board PFs). v0.1.0 extracted Thief helpers from Game.
+// LAST_CHANGE: v1.0.0 - Waves 7-14: added canTarget/sameSpace framework, Pickpocket, Backstab, Hide Loot, Climb, upgrade board, Unnatural Evasion, death rewards with killer bonuses, respawn logic. All temporary filters removed.
 // END_CHANGE_SUMMARY
 package vast
 
@@ -24,11 +24,8 @@ import hrf.logger._
 import vast.elem._
 
 trait GameThiefSupport { self : Game =>
-    // START_BLOCK_THIEF_SUPPORT_CHECKPOINT
-    // PURPOSE: Keep the partial Thief/5p implementation isolated from the large performInternal action match.
-    // STATUS: partial checkpoint. Implemented here: setup, basic stats/action cubes, movement, dark-tile reveal choice, Loot, Pick Lock, carried/stashed loot, and six-stash victory.
-    // PENDING: Pickpocket, Backstab, Hide Loot, full death rewards, upgrade board, and full cross-faction effects from Knight/Goblins/Dragon/Cave.
-    // JVM_LIMIT_NOTE: performInternal is near the JVM per-method bytecode limit. Do not add new Thief or cross-faction cases directly there; route through small helper dispatch methods or extract whole faction sections first.
+    // START_BLOCK_THIEF_SUPPORT
+    // PURPOSE: Complete Thief fifth-player support via trait mixed into Game.
     // LINKS: M-VAST-THIEF-SUPPORT, V-M-VAST-THIEF-SUPPORT, rules/thief.xml
     protected def logThiefMarker(scope : String, block : String, message : String) : Unit =
         +++("[VastThief][" + scope + "][" + block + "] " + message)

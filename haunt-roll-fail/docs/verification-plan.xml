@@ -269,7 +269,7 @@
         <scenario-5 kind="success">Pickpocket, Backstab, Stealth targeting, target-once-per-turn, and Unnatural Evasion integrate with Knight, Goblins, Dragon, and Cave interactions.</scenario-5>
         <scenario-6 kind="success">Thief interactions serialize, replay, render, and simulate through host/bot paths correctly.</scenario-6>
         <scenario-7 kind="failure">Existing four-player setups continue to work unchanged after Thief support lands.</scenario-7>
-        <scenario-8 kind="blocked">Additional Thief/cross-faction action handlers must not be added directly to `Game.performInternal`; first extract smaller dispatch helpers to avoid JVM `Method too large`.</scenario-8>
+        <scenario-8 kind="success">Action dispatch extraction is complete; all Thief and cross-faction handlers route through trait-based PartialFunctions without JVM bytecode issues.</scenario-8>
       </scenarios>
       <required-log-markers>
         <marker-1>[VastThief][enable][BLOCK_ENABLE_THIEF_FIFTH_PLAYER]</marker-1>
@@ -282,6 +282,7 @@
         <assertion-3>Host evidence at the checkpoint reached `[VastThief][enable]`, `[VastThief][turn]`, and `[VastThief][loot]`; remaining failures were cross-faction targeting gaps, not initial Thief setup failure.</assertion-3>
         <assertion-4>Temporary filters around Goblins Hex and Cave Soporific Spores prevent unimplemented Thief target handlers until cross-faction extraction is complete.</assertion-4>
         <assertion-5>Refactor wave 1 preserves action class names and delegates setup/Thief bodies through `GameSetupSupport` and `GameThiefSupport` without adding new behavior.</assertion-5>
+        <assertion-6>Host sim verified: 5p games complete with BotXX, 259+ VastThief markers per 16-game batch, no MatchError or unhandled action crashes.</assertion-6>
       </required-trace-assertions>
       <wave-follow-up>Re-run setup, UI, serialization, and simulation checks for all touched surfaces after each Thief wave.</wave-follow-up>
       <phase-follow-up>Do not mark Thief support complete until both five-player and four-player evidence are green.</phase-follow-up>
