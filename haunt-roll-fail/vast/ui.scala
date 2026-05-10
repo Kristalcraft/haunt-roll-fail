@@ -303,9 +303,12 @@ class UI(val uir : ElementAttachmentPoint, arity : Int, val resources : Resource
                 ("Hatred " ~ game.collapse.?("Infinite").|("Boundless").hl).div
 
             case f : Thief.type =>
-                ("Move " ~ (f.movement - f.moves).hl ~ "/" ~ f.movement.hh ~ " | ".hh ~ "Stealth " ~ f.effectiveStealth.hl ~ "/" ~ f.stealth.hh).div ~
-                ("Thievery " ~ f.thievery.hl ~ " | ".hh ~ "Action cubes " ~ f.actionCubes.hl).div ~
-                ("Carried " ~ f.carried.num.hl ~ " | ".hh ~ "Stashed " ~ f.stashed.hl ~ "/" ~ 6.hh).div ~
+                ("Move " ~ (f.movement - f.moves).hl ~ "/" ~ f.movement.hh).div ~
+                ("Stealth " ~ f.effectiveStealth.hl ~ "/" ~ f.stealth.hh).div ~
+                ("Thievery " ~ f.thievery.hl).div ~
+                ("Action cubes " ~ f.actionCubes.hl).div ~
+                ("Carried " ~ f.carried.num.hl).div ~
+                ("Stashed " ~ f.stashed.hl ~ "/" ~ 6.hh).div ~
                 ("Loot Drop " ~ f.lootDrop.hl).div ~
                 f.upgrades.any.?(("Upgrades: ".hh ~ f.upgrades./(_.elem).join(", ".hh)).div)
 

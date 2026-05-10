@@ -297,7 +297,7 @@ trait GameGoblinsSupport { self : Game =>
                     log(t, "could not attack")
                 }
 
-            case TribeTurnAction(f, t) if factions.of[Thief.type].exists(e => f.tribe(t).position.has(e.position) && e.dead.not) =>
+            case TribeTurnAction(f, t) if factions.of[Thief.type].exists(e => e.placed && e.dead.not && f.tribe(t).position.has(e.position)) =>
                 Ask(f).each(factions.of[Thief.type].%(e => f.tribe(t).position.has(e.position) && e.dead.not))(e => GoblinsAttackAction(f, t, e, DoneTribeAction(f, t)).as("Attack".styled(styles.hit), e)).done(DoneTribeAction(f, t))
 
             case TribeTurnAction(f, t) => (() => {
@@ -319,7 +319,7 @@ trait GameGoblinsSupport { self : Game =>
                     val move = board.get(dest) != Emptiness
 
                     val attack = factions.of[Knight.type].%(_.position == dest)
-                    val attackThief = factions.of[Thief.type].%(e => e.position == dest && e.dead.not)
+                    val attackThief = factions.of[Thief.type].%(e => e.placed && e.dead.not && e.position == dest)
 
                     val burn = board.list(dest).of[FlameWall].any
 

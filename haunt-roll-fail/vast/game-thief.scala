@@ -43,6 +43,7 @@ trait GameThiefSupport { self : Game =>
 
     protected def sameSpace(f : Thief.type, target : Faction) : Boolean = {
         implicit val g : Game = this
+        if (f.placed.not) return false
         target match {
             case e : Knight.type  => e.position == f.position
             case e : Goblins.type => e.tribes.exists(_.position.has(f.position))
@@ -54,6 +55,7 @@ trait GameThiefSupport { self : Game =>
 
     protected def withinRange(f : Thief.type, target : Faction, range : Int) : Boolean = {
         implicit val g : Game = this
+        if (f.placed.not) return false
         target match {
             case e : Knight.type  => f.position.dist(e.position) <= range
             case e : Dragon.type  => e.position.exists(p => f.position.dist(p) <= range)
@@ -108,10 +110,12 @@ trait GameThiefSupport { self : Game =>
         implicit val g : Game = this
         implicit val ask = builder
 
-        if (f.statsAssigned.not)
+        if (f.statsAssigned.not) {
             List((2, 3, 4), (2, 4, 3), (3, 2, 4), (3, 4, 2), (4, 2, 3), (4, 3, 2)).foreach { case (m, s, t) =>
                 + ThiefAssignStatsAction(f, m, s, t)
             }
+            ask(f).needOk
+        }
         else {
             board.list(f.position).of[Chest.type].foreach(t => + ThiefLootAction(f, t, 1).!(f.actionCubes < 1, "no action cubes"))
             board.list(f.position).of[DragonGem].foreach { t =>
@@ -151,10 +155,10 @@ trait GameThiefSupport { self : Game =>
                         .!(f.actionCubes < climbCost, "no action cubes")
                 }
             }
-        }
 
-        + EndPlayerTurnAction(f).as("End Turn")
-        ask(f).needOk
+            + EndPlayerTurnAction(f).as("End Turn")
+            ask(f).needOk
+        }
     }
 
     protected def spendThiefCubes(f : Thief.type, n : Int) {
