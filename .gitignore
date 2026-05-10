@@ -18,6 +18,7 @@ bench-sim-*.txt
 # Local runtime/cache artifacts
 haunt-roll-fail/vast-assets-output.txt
 
-# Local-only downloaded assets (keep out of git history)
+# Optional local mirror / ingest staging (same pixels as webp2/vast when synced)
 haunt-roll-fail/vast/assets/
-haunt-roll-fail/webp2/
+
+# Vast runtime WebP assets are tracked under haunt-roll-fail/webp2/vast/
