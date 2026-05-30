@@ -265,6 +265,7 @@
         <scenario-1 kind="success">A five-player setup including Thief starts successfully, mixes Vault tiles from `setup.has(Thief)`, and exposes only legal Thief actions.</scenario-1>
         <scenario-2 kind="success">Thief setup creates runtime state for Movement, Stealth, Thievery, action cubes, Entrance position, carried loot, and stashed loot.</scenario-2>
         <scenario-3 kind="success">Thief core turn flow supports stat assignment, movement, dark-tile peek/reveal, end-turn cleanup, and death basics according to `rules/thief.xml`.</scenario-3>
+        <scenario-3b kind="success">After End Movement (or movement exhaustion) on a dark tile, Thief is offered exactly two choices: Reveal with tile preview and Keep hidden; action cubes remain available after that choice.</scenario-3b>
         <scenario-4 kind="success">Thief Loot, Pick Lock, Vault, stash, Dragon Gem, treasure shortage, and six-stash victory behavior match `rules/thief.xml`.</scenario-4>
         <scenario-5 kind="success">Pickpocket, Backstab, Stealth targeting, target-once-per-turn, and Unnatural Evasion integrate with Knight, Goblins, Dragon, and Cave interactions.</scenario-5>
         <scenario-6 kind="success">Thief interactions serialize, replay, render, and simulate through host/bot paths correctly.</scenario-6>
@@ -275,6 +276,8 @@
         <marker-1>[VastThief][enable][BLOCK_ENABLE_THIEF_FIFTH_PLAYER]</marker-1>
         <marker-2>[VastThief][turn][BLOCK_THIEF_TURN]</marker-2>
         <marker-3>[VastThief][loot][BLOCK_THIEF_LOOT_STASH]</marker-3>
+        <marker-4>[VastThief][turn][BLOCK_THIEF_END_MOVEMENT]</marker-4>
+        <marker-5>[VastThief][turn][BLOCK_THIEF_DARK_CHOICE]</marker-5>
       </required-log-markers>
       <required-trace-assertions>
         <assertion-1>Five-player enablement must prove both new Thief behavior and non-regression of current four-player flows.</assertion-1>

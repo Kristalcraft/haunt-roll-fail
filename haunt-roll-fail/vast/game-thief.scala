@@ -14,7 +14,7 @@
 // END_MODULE_MAP
 //
 // START_CHANGE_SUMMARY
-// LAST_CHANGE: v1.0.0 - Waves 7-14: added canTarget/sameSpace framework, Pickpocket, Backstab, Hide Loot, Climb, upgrade board, Unnatural Evasion, death rewards with killer bonuses, respawn logic. All temporary filters removed.
+// LAST_CHANGE: v1.0.4 - Inlined Dark tile reveal/keep choices into the main Thief action ask flow to avoid empty transition screens after End movement.
 // END_CHANGE_SUMMARY
 package vast
 
@@ -36,7 +36,6 @@ trait GameThiefSupport { self : Game =>
             case e : Knight.type  => f.effectiveStealth > e.perception
             case e : Goblins.type => f.effectiveStealth > e.tribes./(_.population).sum + 1
             case e : Dragon.type  => f.effectiveStealth > e.armor
-            case _ : Cave.type    => true
             case _                => false
         }
     }
@@ -48,7 +47,6 @@ trait GameThiefSupport { self : Game =>
             case e : Knight.type  => e.position == f.position
             case e : Goblins.type => e.tribes.exists(_.position.has(f.position))
             case e : Dragon.type  => e.position.has(f.position)
-            case _ : Cave.type    => true
             case _                => false
         }
     }
@@ -70,7 +68,6 @@ trait GameThiefSupport { self : Game =>
             case e : Knight.type  => e.stash.any
             case e : Goblins.type => e.hand.any
             case e : Dragon.type  => e.greed.available
-            case _ : Cave.type    => true
             case _                => false
         }
     }
@@ -102,8 +99,60 @@ trait GameThiefSupport { self : Game =>
         f.path = $
         f.usedStickyFingers = false
         f.usedEvasion = false
+        f.movementEnded = false
+        f.darkTileChoiceDone = false
         logThiefMarker("turn", "BLOCK_THIEF_TURN", "movement=" + f.movement + " stealth=" + f.stealth + " thievery=" + f.thievery + " carried=" + f.carried.num + " stashed=" + f.stashed)
         ThiefTurnAction(f)
+    }
+
+    protected def shouldResolveDarkTileChoice(f : Thief.type) : Boolean = {
+        implicit val g : Game = this
+        val movementFinished = f.movementEnded || (f.moves >= f.movement)
+        movementFinished && board.get(f.position).is[HiddenTile] && f.darkTileChoiceDone.not
+    }
+
+    protected def addThiefMovementOptions(f : Thief.type)(implicit ask : ActionCollector) : Unit = {
+        implicit val g : Game = this
+
+        Bearings.wnes.foreach { dir =>
+            val dest = f.position.add(dir)
+            val cell = board.get(dest)
+            val noMovement = f.moves >= f.movement
+
+            // Keep a stable four-direction panel: each direction shows either Move or Climb.
+            if (board.wall(f.position, dir) && cell != Emptiness) {
+                val climbCost = if (f.upgrades.has(ClimbingGear)) 1 else 2
+                + ThiefClimbAction(f, dir, climbCost, cell.is[HiddenTile])
+                    .!(f.movementEnded, "movement ended")
+                    .!(noMovement, "no movement")
+                    .!(f.actionCubes < climbCost, "no action cubes")
+            }
+            else {
+                + ThiefMoveAction(f, dir, cell.is[HiddenTile])
+                    .!(f.movementEnded, "movement ended")
+                    .!(noMovement, "no movement")
+                    .!(cell == Emptiness, "empty")
+                    .!(board.wall(f.position, dir), "wall")
+            }
+        }
+    }
+
+    protected def darkTileChoice(f : Thief.type) : Continue = {
+        implicit val g : Game = this
+
+        val hidden = board.get(f.position).as[HiddenTile]
+        val tilePreview = hidden./ { h =>
+            ((Image(h.tile.name).apply(styles.tile)(styles.abs) ~
+                h.tokens./(t => Image(t.toString.toLowerCase, $(styles.tile, styles.abs))) ~
+                Image("empty", $(styles.tile))).spn ~
+                Image("hidden-" + h.tribe.name).apply(styles.tile))
+        }.|("?".hl)
+        logThiefMarker("turn", "BLOCK_THIEF_DARK_CHOICE", "position=" + f.position + " hidden=" + hidden.any + " preview=" + hidden./(_.tile.name).|("none"))
+
+        Ask(f)
+            .add(RevealTileAction(f, f.position, None, ThiefTurnAction(f)).as("Reveal", tilePreview))
+            .add(ThiefKeepDarkAction(f))
+            .needOk
     }
 
     protected def thiefTurn(f : Thief.type) : Continue = {
@@ -116,45 +165,33 @@ trait GameThiefSupport { self : Game =>
             }
             ask(f).needOk
         }
+        else if (shouldResolveDarkTileChoice(f))
+            darkTileChoice(f)
         else {
-            board.list(f.position).of[Chest.type].foreach(t => + ThiefLootAction(f, t, 1).!(f.actionCubes < 1, "no action cubes"))
-            board.list(f.position).of[DragonGem].foreach { t =>
-                + ThiefLootAction(f, t, 1).!(f.actionCubes < 1, "no action cubes")
-                + ThiefLootAction(f, t, 2).!(f.actionCubes < 2, "no action cubes")
-            }
-            if (board.list(f.position).has(Vault))
-                1.to(3).foreach(cubes => + ThiefPickLockAction(f, cubes).!(f.actionCubes < cubes, "no action cubes"))
-
-            if (f.lootDrop > 0 && f.actionCubes > 0)
-                1.to(min(f.actionCubes, f.lootDrop)).foreach(cubes => + ThiefHideLootAction(f, cubes))
-
-            factions.but(f).foreach { target =>
-                if (canTargetThief(f, target) && sameSpace(f, target) && canPickpocket(f, target) && f.targeted.has(target).not)
-                    1.to(min(f.actionCubes, 3)).foreach(cubes => + ThiefPickpocketAction(f, target, cubes))
-            }
-
-            factions.but(f).but(Cave).foreach { target =>
-                val inRange = sameSpace(f, target) || (f.upgrades.has(HandCrossbow) && withinRange(f, target, 3))
-                if (canTargetThief(f, target) && inRange && f.targeted.has(target).not)
-                    1.to(min(f.actionCubes, 3)).foreach(cubes => + ThiefBackstabAction(f, target, cubes))
-            }
-
-            Bearings.wnes.foreach { dir =>
-                val dest = f.position.add(dir)
-                val cell = board.get(dest)
-                + ThiefMoveAction(f, dir, cell.is[HiddenTile])
-                    .!(f.moves >= f.movement, "no movement")
-                    .!(cell == Emptiness, "empty")
-                    .!(board.wall(f.position, dir), "wall")
-
-                // Climb through wall
-                if (board.wall(f.position, dir) && cell != Emptiness) {
-                    val climbCost = if (f.upgrades.has(ClimbingGear)) 1 else 2
-                    + ThiefClimbAction(f, dir, climbCost, cell.is[HiddenTile])
-                        .!(f.moves >= f.movement, "no movement")
-                        .!(f.actionCubes < climbCost, "no action cubes")
+                board.list(f.position).of[Chest.type].foreach(t => + ThiefLootAction(f, t, 1).!(f.actionCubes < 1, "no action cubes"))
+                board.list(f.position).of[DragonGem].foreach { t =>
+                    + ThiefLootAction(f, t, 1).!(f.actionCubes < 1, "no action cubes")
+                    + ThiefLootAction(f, t, 2).!(f.actionCubes < 2, "no action cubes")
                 }
-            }
+                if (board.list(f.position).has(Vault))
+                    1.to(3).foreach(cubes => + ThiefPickLockAction(f, cubes).!(f.actionCubes < cubes, "no action cubes"))
+
+                if (f.lootDrop > 0 && f.actionCubes > 0)
+                    1.to(min(f.actionCubes, f.lootDrop)).foreach(cubes => + ThiefHideLootAction(f, cubes))
+
+                factions.but(f).but(Cave).foreach { target =>
+                    if (canTargetThief(f, target) && sameSpace(f, target) && canPickpocket(f, target) && f.targeted.has(target).not)
+                        1.to(min(f.actionCubes, 3)).foreach(cubes => + ThiefPickpocketAction(f, target, cubes))
+                }
+
+                factions.but(f).but(Cave).foreach { target =>
+                    val inRange = sameSpace(f, target) || (f.upgrades.has(HandCrossbow) && withinRange(f, target, 3))
+                    if (canTargetThief(f, target) && inRange && f.targeted.has(target).not)
+                        1.to(min(f.actionCubes, 3)).foreach(cubes => + ThiefBackstabAction(f, target, cubes))
+                }
+
+                addThiefMovementOptions(f)
+                + ThiefEndMovementAction(f).!(f.movementEnded, "movement ended").!(f.moves >= f.movement, "no movement")
 
             + EndPlayerTurnAction(f).as("End Turn")
             ask(f).needOk
@@ -187,16 +224,28 @@ trait GameThiefSupport { self : Game =>
 
         f.position = f.position.add(dir)
         f.path :+= f.position
+        f.darkTileChoiceDone = false
         f.log("moved", dir)
 
-        if (board.get(f.position).is[HiddenTile])
-            Ask(f)
-                .add(RevealTileAction(f, f.position, Some(dir), ThiefTurnAction(f)).as("Reveal", board.read(f, f.position).|("?").hl))
-                .add(ThiefKeepDarkAction(f))
-                .needOk
+        if (board.get(f.position).is[HiddenTile] && f.moves >= f.movement && f.darkTileChoiceDone.not) {
+            f.movementEnded = true
+            darkTileChoice(f)
+        }
         else
         if (f.position == board.entrance && f.carried.any)
             stashThiefLoot(f)
+        else
+            ThiefTurnAction(f)
+    }
+
+    protected def endThiefMovement(f : Thief.type) : Continue = {
+        implicit val g : Game = this
+        val onHidden = board.get(f.position).is[HiddenTile]
+        f.movementEnded = true
+        f.log("ended movement")
+        logThiefMarker("turn", "BLOCK_THIEF_END_MOVEMENT", "position=" + f.position + " hidden=" + onHidden + " darkChoiceDone=" + f.darkTileChoiceDone + " cubes=" + f.actionCubes)
+        if (onHidden && f.darkTileChoiceDone.not)
+            darkTileChoice(f)
         else
             ThiefTurnAction(f)
     }
@@ -384,16 +433,9 @@ trait GameThiefSupport { self : Game =>
         implicit val g : Game = this
 
         target match {
-            case e : Cave.type =>
-                // Treasure shortage: if Cave supply is empty, Thief may take from anywhere on map (rules/thief.xml)
-                // Current implementation creates tokens directly; shortage handling deferred to explicit Cave supply tracking
-                f.carried :+= Chest
-                f.log("stole", Chest, "from", e)
-
             case e : Knight.type =>
                 e.stash.shuffle.starting.foreach { t =>
                     e.stash :-= t
-                    f.carried :+= Chest
                     f.log("stole a treasure from", e)
                 }
 
@@ -412,6 +454,9 @@ trait GameThiefSupport { self : Game =>
 
             case _ =>
         }
+
+        f.carried :+= Chest
+        f.log("took", Chest, "from Cave supply")
 
         logThiefMarker("loot", "BLOCK_THIEF_LOOT_STASH", "pickpocket=" + target.short + " carried=" + f.carried.num)
         ThiefTurnAction(f)
@@ -482,7 +527,8 @@ trait GameThiefSupport { self : Game =>
     protected def performThief(a : ThiefAction) : Continue = a match {
         case ThiefAssignStatsAction(f, movement, stealth, thievery) => assignThiefStats(f, movement, stealth, thievery)
         case ThiefMoveAction(f, dir, _) => moveThief(f, dir)
-        case ThiefKeepDarkAction(f) => ThiefTurnAction(f)
+        case ThiefEndMovementAction(f) => endThiefMovement(f)
+        case ThiefKeepDarkAction(f) => implicit val g : Game = this ; f.darkTileChoiceDone = true ; ThiefTurnAction(f)
         case ThiefLootAction(f, t, cubes) => lootThief(f, t, cubes)
         case ThiefLootRollAction(f, t, x) => resolveThiefLootRoll(f, t, x)
         case ThiefPickLockAction(f, cubes) => pickLockThief(f, cubes)

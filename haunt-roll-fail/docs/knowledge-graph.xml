@@ -65,10 +65,10 @@
         <type-Thief PURPOSE="Fifth-player faction aligned with `rules/thief.xml`; partially enabled in setup and basic turn flow." />
         <type-ThiefPlayer PURPOSE="Runtime state for Thief stats, action cubes, carried loot, stashed loot, path, and per-turn targeting." />
         <slice-MinimalBoot STATUS="partial" PURPOSE="Five-player setup, Vault tile inclusion, Entrance placement, and placeholder/status UI." />
-        <slice-CoreTurn STATUS="partial" PURPOSE="Basic stat assignment defaults, movement, dark-tile reveal choice, and end-turn path cleanup." />
+        <slice-CoreTurn STATUS="partial" PURPOSE="Basic stat assignment defaults, movement with explicit End Movement, dark-tile reveal/keep choice with preview, and end-turn path cleanup." />
         <slice-LootVaultStash STATUS="partial" PURPOSE="Basic Loot, Pick Lock, carried/stashed loot, Dragon Gem stash handling, and six-stash victory." />
         <slice-CrossFaction STATUS="done" PURPOSE="Pickpocket, Backstab, Unnatural Evasion, and incoming Knight/Goblins/Dragon/Cave effects require dispatch extraction before more handlers are added." />
-        <slice-Pickpocket STATUS="done" PURPOSE="Pickpocket action with per-faction steal effects and roll mechanics."/>
+        <slice-Pickpocket STATUS="done" PURPOSE="Pickpocket on Knight/Goblins/Dragon only (same-space piece required); not Cave."/>
         <slice-Backstab STATUS="done" PURPOSE="Backstab action with Light/Moderate/Heavy injury per faction."/>
         <slice-HideLoot STATUS="done" PURPOSE="Hide Loot action reducing Loot Drop Level."/>
         <slice-Climb STATUS="done" PURPOSE="Climb action through walls (2 cubes) with Climbing Gear upgrade."/>

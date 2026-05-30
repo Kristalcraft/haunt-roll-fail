@@ -1131,6 +1131,8 @@ class ThiefPlayer(val game : Game, val faction : Thief.type) extends Player {
     var upgrades : $[ThiefUpgrade] = $
     var usedStickyFingers = false
     var usedEvasion = false
+    var movementEnded = false
+    var darkTileChoiceDone = false
     var dead = false
 
     def moves = path.num
@@ -1204,6 +1206,7 @@ case class HideOpenEdgesAction(then : ForcedAction) extends ForcedAction
 trait ThiefAction { self : Action => }
 case class ThiefAssignStatsAction(self : Thief.type, movement : Int, stealth : Int, thievery : Int) extends BaseAction("Assign stat tokens".styled(self))("Move", movement.hl, "Stealth", stealth.hl, "Thievery", thievery.hl) with ThiefAction
 case class ThiefMoveAction(self : Thief.type, direction : Bearing, dark : Boolean) extends BaseAction("Move".styled(self))("Move", direction.elem ~ (direction.dy == 0).?(" ".txt) ~ Image("move-deg-" + direction.rotation * 90, styles.token, ""), dark.?("Dark".hl)) with MoveAction with ThiefAction
+case class ThiefEndMovementAction(self : Thief.type) extends BaseAction("Move".styled(self))("End movement") with ThiefAction
 case class ThiefKeepDarkAction(self : Thief.type) extends BaseAction("Dark tile".styled(self))("Keep hidden") with ThiefAction
 case class ThiefLootAction(self : Thief.type, token : Token, cubes : Int) extends BaseAction("Loot".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, token) with ThiefAction
 case class ThiefLootRollAction(f : Thief.type, token : Token, random : Pattern) extends RandomAction[Pattern] with ThiefAction

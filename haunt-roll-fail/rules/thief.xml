@@ -35,7 +35,7 @@
         <target role="Knight" stat="Perception" />
         <target role="Goblin Tribe" stat="Perception" />
         <target role="Dragon" stat="Armor" />
-        <target role="Cave" stat="always targetable by relevant Thief effects" />
+        <target role="Cave" stat="not a Pickpocket/Backstab target (no board piece); Cave omens and attacks still target Thief" />
       </target-stats>
     </movement-rules>
 
@@ -48,7 +48,8 @@
     <action id="pickpocket">
       <rule>Steal from player on your space. 1 cube: roll 4+; 2 cubes: 2+; 3 cubes: auto.</rule>
       <upgrade>Sticky Fingers: once per turn reroll Pickpocket.</upgrade>
-      <success>Treasure from Cave; Knight Treasure card to bottom or random; Goblin Secrets card; Dragon Sloth Wakefulness→Greed.</success>
+      <success>Knight: Treasure card to bottom or random; Goblins: Secrets card; Dragon: Sloth Wakefulness→Greed. On success Thief also takes one Treasure token from Cave supply (digital adaptation).</success>
+      <clarification source="Scrupulous Scholar 0.11">Pickpocket requires a player piece on the Thief's current space. Cave has no board piece and cannot be Pickpocketed.</clarification>
       <clarification source="Scrupulous Scholar 0.11">If stealing a revealed item, Thief chooses it; otherwise choose randomly. Treasure Trove is an exception handled by its own card text.</clarification>
       <clarification source="Scrupulous Scholar 0.11">Thief cannot target Knight if she has no Treasures, Goblins if they have no takeable Secrets, or Dragon if no Sloth cube can move from Wakefulness to Greed.</clarification>
     </action>
