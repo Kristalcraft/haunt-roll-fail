@@ -202,6 +202,21 @@ class CachedBlobImageLoader(id : String) extends Loader[ImageWrapper] {
 
     var requests = 0
 
+    private def loadDirect(url : String) {
+        var xhr = new dom.XMLHttpRequest()
+        xhr.onerror = (e : dom.ProgressEvent) => fail(url)
+        xhr.onload = (e : dom.Event) => {
+            val blob = xhr.response.asInstanceOf[dom.Blob]
+            if (blob == null)
+                fail(url)
+            else
+                put(url, new BlobImageWrapper(url, blob))
+        }
+        xhr.open("GET", url, true)
+        xhr.responseType = "blob"
+        xhr.send(null)
+    }
+
     def process(url : String) {
         process(url, 0)
     }
@@ -211,7 +226,7 @@ class CachedBlobImageLoader(id : String) extends Loader[ImageWrapper] {
 
         cacheOpen match {
         case None =>
-            fail(url)
+            loadDirect(url)
         case Some(open) =>
         open.then { cache =>
             cache.`match`(url).then({ response =>
@@ -230,18 +245,12 @@ class CachedBlobImageLoader(id : String) extends Loader[ImageWrapper] {
                             }
                         }
                         else {
-                            // println("wait")
-                            setTimeout(tries * 400) {
-                                process(url, tries + 1)
-                            }
+                            loadDirect(url)
                         }
                     }
                     catch {
                         case e : Throwable =>
-                            // println("error")
-                            setTimeout(1000) {
-                                process(url, 0)
-                            }
+                            loadDirect(url)
                     }
                 }
                 else {

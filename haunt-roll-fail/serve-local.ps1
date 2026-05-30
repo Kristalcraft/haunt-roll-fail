@@ -1,11 +1,15 @@
 param(
-    [int] $Port = 8080
+    [int] $Port = 8080,
+    [string] $BindAddress = "127.0.0.1"
 )
 
 $ErrorActionPreference = "Stop"
 $root = [IO.Path]::GetFullPath($PSScriptRoot)
 $listener = New-Object System.Net.HttpListener
-$listener.Prefixes.Add("http://127.0.0.1:$Port/")
+$bindHost = $BindAddress
+if ($BindAddress -eq "0.0.0.0") { $bindHost = "+" }
+$prefix = "http://${bindHost}:${Port}/"
+$listener.Prefixes.Add($prefix)
 
 function Get-Mime([string] $ext) {
     switch ($ext.ToLowerInvariant()) {
@@ -31,15 +35,21 @@ function Get-Mime([string] $ext) {
 try {
     $listener.Start()
 } catch {
-    Write-Host "Не удалось открыть порт $Port : $_"
-    Write-Host "Один раз от администратора можно выполнить:"
-    Write-Host "  netsh http add urlacl url=http://127.0.0.1:$Port/ user=$env:USERNAME"
+    Write-Host "Failed to open port ${Port}: $_"
+    Write-Host "Run once as Administrator:"
+    Write-Host "  netsh http add urlacl url=$prefix user=$env:USERNAME"
     exit 1
 }
 
-Write-Host "Каталог: $root"
-Write-Host "Открой в браузере: http://127.0.0.1:$Port/index.html"
-Write-Host "Остановка: Ctrl+C"
+Write-Host "Root: $root"
+if ($bindHost -eq "+") {
+    Write-Host "Listening on all interfaces: $prefix"
+    Write-Host "This PC: http://127.0.0.1:${Port}/index.html"
+    Write-Host "LAN: http://<LAN-IP>:${Port}/index.html"
+} else {
+    Write-Host "Open in browser: http://${BindAddress}:${Port}/index.html"
+}
+Write-Host "Stop: Ctrl+C"
 Write-Host ""
 
 try {
@@ -49,6 +59,7 @@ try {
         $res = $ctx.Response
         $rel = [Uri]::UnescapeDataString($req.Url.AbsolutePath.TrimStart("/"))
         if ([string]::IsNullOrEmpty($rel)) { $rel = "index.html" }
+        if ($rel.StartsWith("hrf/")) { $rel = $rel.Substring(4) }
         $rel = $rel -replace "/", [IO.Path]::DirectorySeparatorChar
         $full = [IO.Path]::GetFullPath([IO.Path]::Combine($root, $rel))
         if (-not $full.StartsWith($root, [StringComparison]::OrdinalIgnoreCase)) {

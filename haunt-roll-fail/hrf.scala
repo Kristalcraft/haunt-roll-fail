@@ -372,11 +372,9 @@ class HRFUI(implicit resources : Resources) {
         action.asker.zask(HRF.metas./(m => ZBasic("Haunt Roll Fail".hh(xstyles.larger110)(ExternalStyle("consolas")), m.label.spn(xstyles.larger110)(ExternalStyle(m.titleFont.|(""))), null, ZBasic.info.but(xstyles.thumargin))))
     }
 
-    HRF.param("meta")./~(mn => HRF.metas.%(_.name == mn).single)./{m =>
-        new HRFMetaUI(this, m, 800).withMeta()
-    }.|{
-        topMenu()
-    }
+    val defaultMeta = HRF.metas.%(_.name == "vast").single.|(HRF.metas.head)
+    val startupMeta = HRF.param("meta")./~(mn => HRF.metas.%(_.name == mn).single).|(defaultMeta)
+    new HRFMetaUI(this, startupMeta, 800).withMeta()
 
 }
 
@@ -853,6 +851,11 @@ class HRFMetaUI(val ui : HRFUI, val meta : MetaGame, delayMainMenu : Int)(implic
             quickGame()
         }
 
+        def goQuickThiefTest() {
+            history.pushState("/play/" + meta.name + "/quick-thief-test", () => metaMenu())
+            quickGameThiefTest()
+        }
+
         def goHotseat() {
             history.pushState("/play/" + meta.name + "/hotseat", () => metaMenu())
             customGame(false)
@@ -865,9 +868,17 @@ class HRFMetaUI(val ui : HRFUI, val meta : MetaGame, delayMainMenu : Int)(implic
 
         ui.action.asker.zask(
             (
-                ZBasic(title, "Quick Game".hlb, meta.factions.%(f => meta.getBots(f).has(meta.defaultBot(f))).any.??(() => goQuickGame())) ::
-                ZBasic(title, "Local Game".hhb, () => goHotseat()) ::
-                ZBasic(title, "Play Online".hlb, (HRF.server.any && HRF.offline.not).??(() => goOnline()))
+                if (meta.name == "vast")
+                    ZBasic(title, "Quick Game".hlb, meta.factions.%(f => meta.getBots(f).has(meta.defaultBot(f))).any.??(() => goQuickGame())) ::
+                    ZBasic(title, "Quick Game Thief Test".hlb, () => goQuickThiefTest()) ::
+                    ZBasic(title, "Local Game".hhb, () => goHotseat()) ::
+                    ZBasic(title, "Play Online".hlb, (HRF.server.any && HRF.offline.not).??(() => goOnline())) ::
+                    Nil
+                else
+                    ZBasic(title, "Quick Game".hlb, meta.factions.%(f => meta.getBots(f).has(meta.defaultBot(f))).any.??(() => goQuickGame())) ::
+                    ZBasic(title, "Local Game".hhb, () => goHotseat()) ::
+                    ZBasic(title, "Play Online".hlb, (HRF.server.any && HRF.offline.not).??(() => goOnline())) ::
+                    Nil
             ) ++
             meta.intLinks./((t, l) => ZBasic("Other", t, () => {
                 HRF.metas.%(_.name == l).single./{ m =>
@@ -882,6 +893,9 @@ class HRFMetaUI(val ui : HRFUI, val meta : MetaGame, delayMainMenu : Int)(implic
 
         if (HRF.segments.startsWith($("quick")))
             goQuickGame()
+        else
+        if (HRF.segments.startsWith($("quick-thief-test")))
+            goQuickThiefTest()
         else
         if (HRF.segments.startsWith($("hotseat")))
             goHotseat()
@@ -911,7 +925,7 @@ class HRFMetaUI(val ui : HRFUI, val meta : MetaGame, delayMainMenu : Int)(implic
             $(ZBasic("Offline Version", download.not.?("Download".styled(xstyles.warning)).|("Preparing Download".hh ~ " (may take a few minutes)"), download.not.??(() => {
                 val assets = meta.assets./~(_.get)
 
-                val sources = assets./(a => a.name -> ("webp2/" + meta.path + "/images/" + a.copy(ext = "webp").src)).toMap
+                val sources = assets./(a => a.name -> ("/webp2/" + meta.path + "/images/" + a.copy(ext = "webp").src)).toMap
                 val preload = HRF.embedded.?(assets./(a => a.name -> a.name)).|(assets.%(_.lzy == Laziness.Immediate)./(a => a.name -> sources(a.name)))
                 val loader = HRF.embedded.?(new WrappedEmbeddedImageLoader(s => "asset-" + s)).|(HRF.imageCache)
 
@@ -972,6 +986,23 @@ class HRFMetaUI(val ui : HRFUI, val meta : MetaGame, delayMainMenu : Int)(implic
         val bots = d.view.mapValues(s => Bot(s)).toMap + (f -> Human)
 
         startGame(l, bots, o, $, journal, meta.randomGameName(), () => Map(), NoSwitches)
+    }
+
+    def quickGameThiefTest() {
+        HRF.segments = $
+
+        if (meta.name != "vast") {
+            quickGame()
+            return
+        }
+
+        val seating = meta.factions.take(5)
+        val thief = seating.% (f => meta.factionName(f).toLowerCase.contains("thief")).single.|(seating.last)
+        val bots = seating./(f => f -> Bot(meta.defaultBot(f))).toMap + (thief -> Human)
+        val options = OptionsState(meta.optionsFor(seating.num, seating), meta.mandatoryFor(seating.num, seating), $, meta.defaultsFor(seating.num, seating)).checkDimmed().selected
+        val journal = new MemoryJournal[meta.gaming.ExternalAction](meta)
+
+        startGame(seating, bots, options, $, journal, "Thief test game", () => Map(), NoSwitches)
     }
 
     def quickGameOld() {
@@ -1327,7 +1358,7 @@ class HRFMetaUI(val ui : HRFUI, val meta : MetaGame, delayMainMenu : Int)(implic
 
         val assets = meta.assets.%(_.condition(seating, options) || true)./~(_.get)
 
-        val sources = assets./(a => a.name -> ("webp2/" + meta.path + "/images/" + a.copy(ext = "webp").src)).toMap
+        val sources = assets./(a => a.name -> ("/webp2/" + meta.path + "/images/" + a.copy(ext = "webp").src)).toMap
         val preload = HRF.embedded.?(assets./(a => a.name -> a.name)).|(assets.%(_.lzy == Laziness.Immediate)./(a => a.name -> sources(a.name)))
         val loader = HRF.embedded.?(new WrappedEmbeddedImageLoader(s => "asset-" + s)).|(HRF.imageCache)
 
