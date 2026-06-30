@@ -82,7 +82,7 @@
 
   <Constraints>
     <constraint-1>The target runtime is browser-first via Scala.js and DOM-based UI rendering.</constraint-1>
-    <constraint-2>The current code validates exactly four factions and currently rejects Thief, but project planning must preserve a future path to full five-player support.</constraint-2>
+    <constraint-2>Five-player setup with Thief is supported in code; four-player quick play remains the default. Remaining Thief rule gaps must close before marking Phase-4 complete.</constraint-2>
     <constraint-3>Rules accuracy is more important than feature breadth for future execution waves.</constraint-3>
     <constraint-4>Files needed for browser launch and asset loading are in scope together with the `vast` module.</constraint-4>
   </Constraints>

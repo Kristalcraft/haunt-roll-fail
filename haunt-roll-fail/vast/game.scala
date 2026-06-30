@@ -1113,6 +1113,8 @@ case object ClimbingGear extends ThiefUpgrade { def elem = "Climbing Gear".hl }
 case object HandCrossbow extends ThiefUpgrade { def elem = "Hand Crossbow".hl }
 case object StickyFingers extends ThiefUpgrade { def elem = "Sticky Fingers".hl }
 case object UnnaturalEvasion extends ThiefUpgrade { def elem = "Unnatural Evasion".hl }
+case object FlipStat2to3 extends ThiefUpgrade { def elem = "Flip stat token 2→3".hl }
+case object FlipStat3to4 extends ThiefUpgrade { def elem = "Flip stat token 3→4".hl }
 case class StatBoost(stat : String) extends ThiefUpgrade { def elem = ("+1 " + stat).hl }
 
 class ThiefPlayer(val game : Game, val faction : Thief.type) extends Player {
@@ -1126,6 +1128,7 @@ class ThiefPlayer(val game : Game, val faction : Thief.type) extends Player {
     var lootDrop = 3
     var carried : $[Token] = $
     var stashed = 0
+    var skippedUpgrades = 0
     var path : $[Relative] = $
     var targeted : $[Faction] = $
     var upgrades : $[ThiefUpgrade] = $
@@ -1134,6 +1137,9 @@ class ThiefPlayer(val game : Game, val faction : Thief.type) extends Player {
     var movementEnded = false
     var darkTileChoiceDone = false
     var dead = false
+    var pendingMovement : |[Int] = None
+    var pendingStealth : |[Int] = None
+    var pendingThievery : |[Int] = None
 
     def moves = path.num
     def effectiveStealth = max(0, stealth - carried.num)
@@ -1205,6 +1211,8 @@ case class HideOpenEdgesAction(then : ForcedAction) extends ForcedAction
 
 trait ThiefAction { self : Action => }
 case class ThiefAssignStatsAction(self : Thief.type, movement : Int, stealth : Int, thievery : Int) extends BaseAction("Assign stat tokens".styled(self))("Move", movement.hl, "Stealth", stealth.hl, "Thievery", thievery.hl) with ThiefAction
+case class ThiefSelectStatValueAction(self : Thief.type, stat : String, value : Int, selected : Boolean) extends BaseAction("Assign stat tokens".styled(self))(stat.hh, value.hl, selected.?("Selected".hh)) with ThiefAction
+case class ThiefFinishAssignStatsAction(self : Thief.type) extends BaseAction("Assign stat tokens".styled(self))("Finish") with ThiefAction
 case class ThiefMoveAction(self : Thief.type, direction : Bearing, dark : Boolean) extends BaseAction("Move".styled(self))("Move", direction.elem ~ (direction.dy == 0).?(" ".txt) ~ Image("move-deg-" + direction.rotation * 90, styles.token, ""), dark.?("Dark".hl)) with MoveAction with ThiefAction
 case class ThiefEndMovementAction(self : Thief.type) extends BaseAction("Move".styled(self))("End movement") with ThiefAction
 case class ThiefKeepDarkAction(self : Thief.type) extends BaseAction("Dark tile".styled(self))("Keep hidden") with ThiefAction
@@ -1216,7 +1224,7 @@ case class ThiefPickpocketAction(self : Thief.type, target : Faction, cubes : In
 case class ThiefPickpocketRollAction(f : Thief.type, target : Faction, cubes : Int, random : Pattern) extends RandomAction[Pattern] with ThiefAction
 case class ThiefBackstabAction(self : Thief.type, target : AttackTarget, cubes : Int) extends BaseAction("Backstab".styled(self))(target, cubes.hl, "cube".s(cubes).hl) with ThiefAction
 case class ThiefHideLootAction(self : Thief.type, cubes : Int) extends BaseAction("Hide Loot".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, "reduce Loot Drop") with ThiefAction
-case class ThiefClimbAction(self : Thief.type, direction : Bearing, cubes : Int, dark : Boolean) extends BaseAction("Climb".styled(self))(cubes.hl, "cube".s(cubes).hl, dt.Arrow, "Move", direction.elem ~ (direction.dy == 0).?(" ".txt), dark.?("Dark".hl)) with MoveAction with ThiefAction
+case class ThiefClimbAction(self : Thief.type, direction : Bearing, cubes : Int, dark : Boolean) extends BaseAction("Move".styled(self))("Climb", cubes.hl, "cube".s(cubes).hl, dt.Arrow, direction.elem ~ (direction.dy == 0).?(" ".txt), dark.?("Dark".hl)) with MoveAction with ThiefAction
 case class ThiefStashChoiceAction(self : Thief.type, upgrade : |[ThiefUpgrade]) extends BaseAction("Upgrade".styled(self))(upgrade./(u => "Place on" ~ u.elem).|("Skip")) with ThiefAction
 case class ThiefEvasionRollAction(f : Thief.type, attacker : Faction, then : ForcedAction, random : Pattern) extends RandomAction[Pattern] with ThiefAction
 

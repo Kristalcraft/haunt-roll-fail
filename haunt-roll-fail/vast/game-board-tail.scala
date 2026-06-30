@@ -2,10 +2,21 @@
 // VERSION: 0.1.0
 // START_MODULE_CONTRACT
 // PURPOSE: Board / collapse / reconnect / fillers / generic turn tail `PartialFunction` for `Game.caveTailPart3`.
+// SCOPE: Tile collapse, reconnect, map fillers, EndPlayerTurn rotation, and generic turn-tail dispatch arms.
 // DEPENDS: vast.Game, Continue, Action; mix into Game only (bytecode offload).
 // LINKS: M-VAST-GAME
 // ROLE: RUNTIME
+// MAP_MODE: LOCALS
 // END_MODULE_CONTRACT
+//
+// START_MODULE_MAP
+// GameBoardTailSupport - board/collapse/reconnect PartialFunction for caveTailPart3 orElse chain
+// boardTailDispatchPart3 - generic turn tail and EndPlayerTurn faction rotation
+// END_MODULE_MAP
+//
+// START_CHANGE_SUMMARY
+// LAST_CHANGE: v0.1.0 - Extracted board tail dispatch to reduce bytecode pressure inside Game.caveTailPart3.
+// END_CHANGE_SUMMARY
 package vast
 
 import hrf.colmat._

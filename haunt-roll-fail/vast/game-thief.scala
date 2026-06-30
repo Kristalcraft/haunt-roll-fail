@@ -1,5 +1,5 @@
 // FILE: vast/game-thief.scala
-// VERSION: 1.0.0
+// VERSION: 1.0.5
 // START_MODULE_CONTRACT
 // PURPOSE: Own all Thief fifth-player runtime support: setup, turn flow, actions, upgrades, cross-faction targeting, death/respawn.
 // SCOPE: Stealth targeting, Pickpocket, Backstab, Hide Loot, Climb, upgrade board, Unnatural Evasion, death rewards, and Thief verification markers.
@@ -10,11 +10,14 @@
 // END_MODULE_CONTRACT
 //
 // START_MODULE_MAP
-// GameThiefSupport - complete Thief faction dispatch: setup, targeting, actions, upgrades, evasion, death/respawn
+// GameThiefSupport - Thief faction dispatch: setup, targeting, turn flow, stat assignment, loot/stash, upgrades, evasion, death/respawn
+// thiefStatTokenPool - stat token values including flip-upgrade ranges
+// selectThiefStatValue / finishThiefStatAssignment - interactive per-stat assignment flow
+// thiefCaveTailDispatchPart3 - PartialFunction bridge for Thief turn routing in caveTailPart3
 // END_MODULE_MAP
 //
 // START_CHANGE_SUMMARY
-// LAST_CHANGE: v1.0.4 - Inlined Dark tile reveal/keep choices into the main Thief action ask flow to avoid empty transition screens after End movement.
+// LAST_CHANGE: v1.0.5 - Paired THIEF_SUPPORT semantic block; interactive stat assignment with flip-token upgrades (FlipStat2to3/4) and skippedUpgrades stash slot semantics.
 // END_CHANGE_SUMMARY
 package vast
 
@@ -101,8 +104,78 @@ trait GameThiefSupport { self : Game =>
         f.usedEvasion = false
         f.movementEnded = false
         f.darkTileChoiceDone = false
+        f.pendingMovement = None
+        f.pendingStealth = None
+        f.pendingThievery = None
         logThiefMarker("turn", "BLOCK_THIEF_TURN", "movement=" + f.movement + " stealth=" + f.stealth + " thievery=" + f.thievery + " carried=" + f.carried.num + " stashed=" + f.stashed)
         ThiefTurnAction(f)
+    }
+
+    protected def thiefStatTokenPool(f : Thief.type) : List[Int] = {
+        implicit val g : Game = this
+        val token2 = f.upgrades.has(FlipStat2to3).?(3).|(2)
+        val token3 = f.upgrades.has(FlipStat3to4).?(4).|(3)
+        val token4 = 4
+        val allSpecials = $(LockPickingKit, ClimbingGear, HandCrossbow, StickyFingers).forall(f.upgrades.has)
+        if (allSpecials) List(4, 4, 4) else List(token2, token3, token4)
+    }
+
+    protected def selectedStatValue(f : Thief.type, stat : String) : |[Int] = {
+        implicit val g : Game = this
+        stat match {
+            case "Movement" => f.pendingMovement
+            case "Stealth" => f.pendingStealth
+            case "Thievery" => f.pendingThievery
+            case _ => None
+        }
+    }
+
+    protected def setSelectedStatValue(f : Thief.type, stat : String, value : Int) : Unit = {
+        implicit val g : Game = this
+        stat match {
+            case "Movement" => f.pendingMovement = Some(value)
+            case "Stealth" => f.pendingStealth = Some(value)
+            case "Thievery" => f.pendingThievery = Some(value)
+            case _ =>
+        }
+    }
+
+    protected def canUseStatValue(f : Thief.type, stat : String, value : Int) : Boolean = {
+        implicit val g : Game = this
+        val pool = thiefStatTokenPool(f)
+        val selectedElsewhere = stat match {
+            case "Movement" => List(f.pendingStealth, f.pendingThievery).flatten
+            case "Stealth" => List(f.pendingMovement, f.pendingThievery).flatten
+            case "Thievery" => List(f.pendingMovement, f.pendingStealth).flatten
+            case _ => Nil
+        }
+
+        selectedElsewhere.count(_ == value) < pool.count(_ == value) || selectedStatValue(f, stat).has(value)
+    }
+
+    protected def statSelectionComplete(f : Thief.type) : Boolean = {
+        implicit val g : Game = this
+        val complete = f.pendingMovement.any && f.pendingStealth.any && f.pendingThievery.any
+        complete &&
+            canUseStatValue(f, "Movement", f.pendingMovement.get) &&
+            canUseStatValue(f, "Stealth", f.pendingStealth.get) &&
+            canUseStatValue(f, "Thievery", f.pendingThievery.get)
+    }
+
+    protected def selectThiefStatValue(f : Thief.type, stat : String, value : Int) : Continue = {
+        implicit val g : Game = this
+        if (canUseStatValue(f, stat, value))
+            setSelectedStatValue(f, stat, value)
+
+        ThiefTurnAction(f)
+    }
+
+    protected def finishThiefStatAssignment(f : Thief.type) : Continue = {
+        implicit val g : Game = this
+        if (statSelectionComplete(f))
+            assignThiefStats(f, f.pendingMovement.get, f.pendingStealth.get, f.pendingThievery.get)
+        else
+            ThiefTurnAction(f)
     }
 
     protected def shouldResolveDarkTileChoice(f : Thief.type) : Boolean = {
@@ -160,9 +233,15 @@ trait GameThiefSupport { self : Game =>
         implicit val ask = builder
 
         if (f.statsAssigned.not) {
-            List((2, 3, 4), (2, 4, 3), (3, 2, 4), (3, 4, 2), (4, 2, 3), (4, 3, 2)).foreach { case (m, s, t) =>
-                + ThiefAssignStatsAction(f, m, s, t)
+            val tokens = thiefStatTokenPool(f)
+            List("Movement", "Thievery", "Stealth").foreach { stat =>
+                tokens.foreach { value =>
+                    val selected = selectedStatValue(f, stat).has(value)
+                    + ThiefSelectStatValueAction(f, stat, value, selected)
+                        .!(canUseStatValue(f, stat, value).not, "used")
+                }
             }
+            + ThiefFinishAssignStatsAction(f).!(statSelectionComplete(f).not, "choose all stats")
             ask(f).needOk
         }
         else if (shouldResolveDarkTileChoice(f))
@@ -214,6 +293,9 @@ trait GameThiefSupport { self : Game =>
         f.stealth = stealth + stealthBonus
         f.thievery = thievery + thieveryBonus
         f.statsAssigned = true
+        f.pendingMovement = None
+        f.pendingStealth = None
+        f.pendingThievery = None
         f.actionCubes = f.thievery
         f.log("assigned stats", "Movement".hh, f.movement.hl, "Stealth".hh, f.stealth.hl, "Thievery".hh, f.thievery.hl)
         ThiefTurnAction(f)
@@ -327,15 +409,16 @@ trait GameThiefSupport { self : Game =>
         implicit val ask = builder
 
         val specials = $(LockPickingKit, ClimbingGear, HandCrossbow, StickyFingers, UnnaturalEvasion).diff(f.upgrades)
+        val flips = $(FlipStat2to3, FlipStat3to4).diff(f.upgrades)
         val stats = $("Movement", "Stealth", "Thievery")./(StatBoost).%( {
             case StatBoost("Movement") => f.movement < 5
             case StatBoost("Stealth")  => f.stealth < 5
             case StatBoost("Thievery") => f.thievery < 5
             case _ => false
         })
-        val available = specials ++ stats
+        val available = specials ++ flips ++ stats
 
-        if (available.any && f.stashed > f.upgrades.num) {
+        if (available.any && f.stashed > (f.upgrades.num + f.skippedUpgrades)) {
             available.foreach(u => + ThiefStashChoiceAction(f, Some(u)))
             + ThiefStashChoiceAction(f, None)
             ask(f).needOk
@@ -344,21 +427,30 @@ trait GameThiefSupport { self : Game =>
             ThiefTurnAction(f)
     }
 
-    protected def applyUpgrade(f : Thief.type, upgrade : |[ThiefUpgrade]) : ForcedAction = {
+    protected def applyUpgrade(f : Thief.type, upgrade : |[ThiefUpgrade]) : Continue = {
         implicit val g : Game = this
 
         upgrade match {
-            case None => ThiefTurnAction(f)
+            case None =>
+                // A skipped slot still consumes one stash-upgrade opportunity.
+                f.skippedUpgrades += 1
+                chooseUpgrade(f)
             case Some(u) =>
                 f.upgrades :+= u
                 f.log("gained upgrade", u)
                 u match {
-                    case StatBoost("Movement") => f.movement += 1
+                    case StatBoost("Movement") =>
+                        f.movement += 1
+                        if (f.movementEnded && f.moves < f.movement)
+                            f.movementEnded = false
                     case StatBoost("Stealth")  => f.stealth += 1
                     case StatBoost("Thievery") => f.thievery += 1
+                    case FlipStat2to3 | FlipStat3to4 =>
+                        // Flip-token upgrades only change future stat token ranges.
+                        f.log("flipped stat token")
                     case _ =>
                 }
-                ThiefTurnAction(f)
+                chooseUpgrade(f)
         }
     }
 
@@ -526,6 +618,8 @@ trait GameThiefSupport { self : Game =>
 
     protected def performThief(a : ThiefAction) : Continue = a match {
         case ThiefAssignStatsAction(f, movement, stealth, thievery) => assignThiefStats(f, movement, stealth, thievery)
+        case ThiefSelectStatValueAction(f, stat, value, _) => selectThiefStatValue(f, stat, value)
+        case ThiefFinishAssignStatsAction(f) => finishThiefStatAssignment(f)
         case ThiefMoveAction(f, dir, _) => moveThief(f, dir)
         case ThiefEndMovementAction(f) => endThiefMovement(f)
         case ThiefKeepDarkAction(f) => implicit val g : Game = this ; f.darkTileChoiceDone = true ; ThiefTurnAction(f)
@@ -555,5 +649,5 @@ trait GameThiefSupport { self : Game =>
 
     }
 
-    // END_BLOCK_THIEF_SUPPORT_CHECKPOINT
+    // END_BLOCK_THIEF_SUPPORT
 }

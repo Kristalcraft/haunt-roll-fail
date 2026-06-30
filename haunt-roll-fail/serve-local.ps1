@@ -74,15 +74,35 @@ try {
             $res.StatusCode = 404
             $msg = [Text.Encoding]::UTF8.GetBytes("404")
             $res.ContentLength64 = $msg.LongLength
-            $res.OutputStream.Write($msg, 0, $msg.Length)
-            $res.Close()
+            if ($req.HttpMethod -eq "HEAD") {
+                $res.Close()
+                continue
+            }
+            try {
+                $res.OutputStream.Write($msg, 0, $msg.Length)
+            } catch [System.Net.HttpListenerException] {
+                # Client disconnected while 404 response was being sent.
+            } finally {
+                $res.Close()
+            }
             continue
         }
         $bytes = [IO.File]::ReadAllBytes($full)
         $res.ContentType = Get-Mime ([IO.Path]::GetExtension($full))
         $res.ContentLength64 = $bytes.LongLength
-        $res.OutputStream.Write($bytes, 0, $bytes.Length)
-        $res.Close()
+        if ($req.HttpMethod -eq "HEAD") {
+            $res.Close()
+            continue
+        }
+        try {
+            $res.OutputStream.Write($bytes, 0, $bytes.Length)
+        } catch [System.Net.ProtocolViolationException] {
+            # Some clients trigger HEAD-like behavior; avoid terminating the server.
+        } catch [System.Net.HttpListenerException] {
+            # Client disconnected while response was being sent.
+        } finally {
+            $res.Close()
+        }
     }
 } finally {
     $listener.Stop()

@@ -2,10 +2,21 @@
 // VERSION: 0.1.0
 // START_MODULE_CONTRACT
 // PURPOSE: Cave `PartialFunction` for `Game.caveTailPart3` (omens, omens main phase, Cave end-turn).
+// SCOPE: Omen draw/shuffle, omens main phase, Soporific Spores, and Cave end-turn dispatch arms.
 // DEPENDS: vast.Game, Continue, Action; mix into Game only (bytecode offload).
 // LINKS: M-VAST-GAME
 // ROLE: RUNTIME
+// MAP_MODE: LOCALS
 // END_MODULE_CONTRACT
+//
+// START_MODULE_MAP
+// GameCaveTailSupport - Cave PartialFunction for caveTailPart3 orElse chain
+// caveTailCaveDispatchPart3 - Cave omen and end-turn routing before Thief and board tail
+// END_MODULE_MAP
+//
+// START_CHANGE_SUMMARY
+// LAST_CHANGE: v0.1.0 - Extracted Cave tail dispatch to reduce bytecode pressure inside Game.caveTailPart3.
+// END_CHANGE_SUMMARY
 package vast
 
 import hrf.colmat._

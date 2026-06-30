@@ -259,13 +259,14 @@
         <check-2>sbt fastOptJS</check-2>
         <check-3>Run a five-player startup and focused Thief scenario pass.</check-3>
         <check-4>Run host-side replay/simulation checks that include Thief actions.</check-4>
-        <check-5>Before continuing implementation, rerun `sbt compile` because the last post-filter compile was interrupted after documenting the JVM limit workaround.</check-5>
+        <check-5>Rerun `sbt compile`, `fastOptJS`, and host sim with serialize round-trip after stat-assignment and GRACE refresh changes.</check-5>
       </module-checks>
       <scenarios>
         <scenario-1 kind="success">A five-player setup including Thief starts successfully, mixes Vault tiles from `setup.has(Thief)`, and exposes only legal Thief actions.</scenario-1>
         <scenario-2 kind="success">Thief setup creates runtime state for Movement, Stealth, Thievery, action cubes, Entrance position, carried loot, and stashed loot.</scenario-2>
         <scenario-3 kind="success">Thief core turn flow supports stat assignment, movement, dark-tile peek/reveal, end-turn cleanup, and death basics according to `rules/thief.xml`.</scenario-3>
         <scenario-3b kind="success">After End Movement (or movement exhaustion) on a dark tile, Thief is offered exactly two choices: Reveal with tile preview and Keep hidden; action cubes remain available after that choice.</scenario-3b>
+        <scenario-3c kind="success">Thief stat assignment offers per-stat token choices respecting flip-upgrade ranges (FlipStat2to3, FlipStat3to4); ThiefSelectStatValueAction and ThiefFinishAssignStatsAction complete assignment before movement.</scenario-3c>
         <scenario-4 kind="success">Thief Loot, Pick Lock, Vault, stash, Dragon Gem, treasure shortage, and six-stash victory behavior match `rules/thief.xml`.</scenario-4>
         <scenario-5 kind="success">Pickpocket, Backstab, Stealth targeting, target-once-per-turn, and Unnatural Evasion integrate with Knight, Goblins, Dragon, and Cave interactions.</scenario-5>
         <scenario-6 kind="success">Thief interactions serialize, replay, render, and simulate through host/bot paths correctly.</scenario-6>
@@ -278,12 +279,13 @@
         <marker-3>[VastThief][loot][BLOCK_THIEF_LOOT_STASH]</marker-3>
         <marker-4>[VastThief][turn][BLOCK_THIEF_END_MOVEMENT]</marker-4>
         <marker-5>[VastThief][turn][BLOCK_THIEF_DARK_CHOICE]</marker-5>
+        <marker-6>[VastThief][turn][BLOCK_THIEF_STAT_ASSIGN]</marker-6>
       </required-log-markers>
       <required-trace-assertions>
         <assertion-1>Five-player enablement must prove both new Thief behavior and non-regression of current four-player flows.</assertion-1>
         <assertion-2>Each implemented Thief mechanic must cite the matching `rules/thief.xml` section in work notes or code review notes.</assertion-2>
         <assertion-3>Host evidence at the checkpoint reached `[VastThief][enable]`, `[VastThief][turn]`, and `[VastThief][loot]`; remaining failures were cross-faction targeting gaps, not initial Thief setup failure.</assertion-3>
-        <assertion-4>Temporary filters around Goblins Hex and Cave Soporific Spores prevent unimplemented Thief target handlers until cross-faction extraction is complete.</assertion-4>
+        <assertion-4>Cross-faction handlers for Hex and Soporific Spores target Thief through trait dispatch; remaining gap is Knight direct attack to tryEvasion.</assertion-4>
         <assertion-5>Refactor wave 1 preserves action class names and delegates setup/Thief bodies through `GameSetupSupport` and `GameThiefSupport` without adding new behavior.</assertion-5>
         <assertion-6>Host sim verified: 5p games complete with BotXX, 259+ VastThief markers per 16-game batch, no MatchError or unhandled action crashes.</assertion-6>
       </required-trace-assertions>

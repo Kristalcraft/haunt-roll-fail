@@ -191,7 +191,8 @@
         <checkpoint-2026-04-28-wave5>Wave 5 moves Goblins arms from inline `performInternalPart2` into `vast/game-goblins.scala` as `GameGoblinsSupport#goblinDispatchPart2`; `performInternalPart2` delegates via `lift` then `performInternalPart3`. Behavior-preserving; verify `sbt compile`, `fastOptJS`, optional Vast sim.</checkpoint-2026-04-28-wave5>
         <checkpoint-2026-04-28-wave6>Wave 6 splits `caveTailPart3` into `GameCaveTailSupport#caveTailCaveDispatchPart3` + `GameThiefSupport#thiefCaveTailDispatchPart3` + `GameBoardTailSupport#boardTailDispatchPart3` (`orElse` chain). `EndPlayerTurnAction` uses `factions =` (not `private implicit game` from traits). Files: `vast/game-cave-tail.scala`, `vast/game-board-tail.scala`, `vast/game-thief.scala`.</checkpoint-2026-04-28-wave6>
         <checkpoint-2026-04-29>Waves 7-14 complete: stealth targeting framework, Pickpocket, Backstab, Hide Loot, Climb, upgrade board (5 specials + stat boosts), cross-faction incoming (Hex and Soporific Spores filters removed, handlers added), Unnatural Evasion, death rewards by Loot Drop Level, respawn, Thief sprite rendering. Host sim verified 5p with 259 Thief markers across 16 games.</checkpoint-2026-04-29>
-        <next-step>Remaining work: refine Pickpocket card selection (Treasure Trove exception), implement treasure shortage rule, add Hand Crossbow ranged backstab, wire Sticky Fingers reroll into Pickpocket, connect Knight/Dragon direct attack handlers to tryEvasion, and browser-test all Thief interactions.</next-step>
+        <next-step>Remaining work: treasure shortage rule, Lock Picking Kit cube discount, Unnatural Evasion post-roll move, Pickpocket card selection (Treasure Trove exception), Knight direct attack to tryEvasion, Goblin per-tribe perception targeting, serialize round-trip for new stat-assignment actions, and browser-test Thief interactions.</next-step>
+        <checkpoint-2026-06-30>GRACE refresh: paired END_BLOCK_THIEF_SUPPORT, added GRACE markup to faction trait files, synced graph/plan/verification/requirements statuses. WIP: interactive stat assignment with FlipStat2to3/4 and skippedUpgrades.</checkpoint-2026-06-30>
       </notes>
     </M-VAST-THIEF-SUPPORT>
 
@@ -371,21 +372,21 @@
   </DataFlow>
 
   <ImplementationOrder>
-    <Phase-1 name="Baseline governance" status="pending">
+    <Phase-1 name="Baseline governance" status="complete">
       <goal>Make the current Vast architecture explicit and navigable before deeper feature work.</goal>
       <step-1 module="M-VAST-RULES" status="done" verification="V-M-VAST-RULES">Anchor the XML rule corpus as a first-class reference.</step-1>
       <step-2 module="M-VAST-GAME" status="done" verification="V-M-VAST-GAME">Document the core rules engine as the authority for state transitions.</step-2>
       <step-3 module="M-VAST-SERIALIZE" status="done" verification="V-M-VAST-SERIALIZE">Document replay and action-transport stability requirements.</step-3>
     </Phase-1>
 
-    <Phase-2 name="Runtime and UX verification" status="pending">
+    <Phase-2 name="Runtime and UX verification" status="complete">
       <goal>Stabilize browser startup and high-value gameplay interaction surfaces.</goal>
       <step-1 module="M-VAST-META" status="done" verification="V-M-VAST-META">Document faction validation and asset/runtime binding.</step-1>
       <step-2 module="M-VAST-UI" status="done" verification="V-M-VAST-UI">Document the rendering and click-path surface that must stay aligned with rules.</step-2>
       <step-3 module="M-HRF-WEB-RUNTIME" status="done" verification="V-M-HRF-WEB-RUNTIME">Document browser bootstrap files needed for launch.</step-3>
     </Phase-2>
 
-    <Phase-3 name="Bot strength and AI readiness" status="pending">
+    <Phase-3 name="Bot strength and AI readiness" status="complete">
       <goal>Prepare a safer surface for stronger bot play and future AI agent integration.</goal>
       <step-1 module="M-VAST-BOT" status="done" verification="V-M-VAST-BOT">Document current heuristic bots and identify evaluation seams.</step-1>
       <step-2 module="M-VAST-HOST" status="done" verification="V-M-VAST-HOST">Document the host/simulation path for batch validation and future AI benchmarking.</step-2>
@@ -396,10 +397,10 @@
       <step-1 module="M-VAST-THIEF-SUPPORT" status="done" verification="V-M-VAST-THIEF-SUPPORT">Refresh GRACE artifacts and map `rules/thief.xml` to concrete execution slices.</step-1>
       <step-2 module="M-VAST-META" status="partial" verification="V-M-VAST-META">Expand faction validation and setup from four-player-only to verified five-player support while preserving four-player starts. Current code allows 5p with Thief and keeps quick play 4p, but the latest post-filter compile still needs to be rerun.</step-2>
       <step-3 module="M-VAST-THIEF-SUPPORT" status="partial" verification="V-M-VAST-THIEF-SUPPORT">Add minimal `ThiefPlayer` setup, Entrance placement, basic stats, action cubes, and placeholder status UI. Implemented at checkpoint, pending final verification after the last documentation/filter changes.</step-3>
-      <step-4 module="M-VAST-THIEF-SUPPORT" status="partial" verification="V-M-VAST-THIEF-SUPPORT">Implement the Thief core turn loop: stat assignment, movement, explicit End Movement control, dark-tile peek/reveal (with visible preview), end-turn cleanup, and death basics. Basic flow exists; full death reward/respawn semantics remain pending.</step-4>
-      <step-5 module="M-VAST-THIEF-SUPPORT" status="partial" verification="V-M-VAST-THIEF-SUPPORT">Implement Loot, Pick Lock, Vault, carried/stashed loot, Dragon Gem handling, treasure shortage, and six-stash victory. Basic Loot/Pick Lock/stash/victory exists; treasure shortage and upgrade-space details remain pending.</step-5>
-      <step-6 module="M-VAST-THIEF-SUPPORT" status="done" verification="V-M-VAST-THIEF-SUPPORT">Implement Pickpocket, Backstab, Stealth targeting, target-once-per-turn tracking, and Unnatural Evasion. Blocked on extracting action dispatch from `performInternal` to avoid JVM `Method too large`.</step-6>
-      <step-7 module="M-VAST-GAME" status="done" verification="V-M-VAST-GAME">Integrate cross-faction rules for Knight, Goblins, Dragon, and Cave interactions with Thief. Temporary generation filters exclude some old cross-faction actions from targeting Thief until handlers can be added outside the monolithic match.</step-7>
+      <step-4 module="M-VAST-THIEF-SUPPORT" status="partial" verification="V-M-VAST-THIEF-SUPPORT">Implement the Thief core turn loop: interactive stat assignment with flip-token upgrades, movement, explicit End Movement control, dark-tile peek/reveal (with visible preview), end-turn cleanup, death rewards, and respawn. Core flow and death/respawn implemented; compile/sim rerun pending after stat-assignment WIP.</step-4>
+      <step-5 module="M-VAST-THIEF-SUPPORT" status="partial" verification="V-M-VAST-THIEF-SUPPORT">Implement Loot, Pick Lock, Vault, carried/stashed loot, Dragon Gem handling, flip/stat upgrades with skipped slot tracking, treasure shortage, and six-stash victory. Basic Loot/Pick Lock/stash/victory and upgrade board exist; treasure shortage, Lock Picking Kit discount, and Vault once-per-turn tracking remain pending.</step-5>
+      <step-6 module="M-VAST-THIEF-SUPPORT" status="done" verification="V-M-VAST-THIEF-SUPPORT">Implement Pickpocket, Backstab, Stealth targeting, target-once-per-turn tracking, Unnatural Evasion, Hand Crossbow ranged backstab, and Sticky Fingers reroll. Dispatch extracted to trait-based PartialFunctions.</step-6>
+      <step-7 module="M-VAST-GAME" status="done" verification="V-M-VAST-GAME">Integrate cross-faction rules for Knight, Goblins, Dragon, and Cave interactions with Thief. Hex and Soporific Spores handlers wired; Knight direct attack to tryEvasion pending.</step-7>
       <step-8 module="M-VAST-UI" status="done" verification="V-M-VAST-UI">Complete browser status/overlay and interaction support for the fifth faction with placeholder assets. Status UI exists; board/overlay art remains placeholder.</step-8>
       <step-9 module="M-VAST-SERIALIZE" status="partial" verification="V-M-VAST-SERIALIZE">Verify new Thief external actions serialize and parse through replay paths. Host round-trip reached Thief markers before cross-faction gaps; rerun after dispatch refactor.</step-9>
       <step-10 module="M-VAST-BOT" status="partial" verification="V-M-VAST-BOT">Add legal-action-safe Thief bot behavior for host simulation. Generic bot can choose legal actions, but no Thief-specific evaluator exists yet.</step-10>

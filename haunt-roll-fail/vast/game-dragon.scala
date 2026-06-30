@@ -2,10 +2,21 @@
 // VERSION: 0.1.0
 // START_MODULE_CONTRACT
 // PURPOSE: Isolate Dragon faction `PartialFunction` dispatch used from `Game.performInternalPart3`.
+// SCOPE: Dragon turn start, movement, combat, lair, treasure, and related action dispatch arms.
 // DEPENDS: vast.Game, Continue, Action; mix into Game only (bytecode offload from monolithic matcher).
 // LINKS: M-VAST-GAME
 // ROLE: RUNTIME
+// MAP_MODE: LOCALS
 // END_MODULE_CONTRACT
+//
+// START_MODULE_MAP
+// GameDragonSupport - Dragon PartialFunction extracted from performInternalPart3 for JVM bytecode limit
+// dragonDispatchPart3 - Dragon action routing delegated via lift from performInternalPart3
+// END_MODULE_MAP
+//
+// START_CHANGE_SUMMARY
+// LAST_CHANGE: v0.1.0 - Extracted Dragon dispatch to reduce bytecode pressure inside Game.performInternalPart3.
+// END_CHANGE_SUMMARY
 package vast
 
 import hrf.colmat._

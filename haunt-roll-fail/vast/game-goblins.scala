@@ -2,10 +2,21 @@
 // VERSION: 0.1.0
 // START_MODULE_CONTRACT
 // PURPOSE: Goblins `PartialFunction` offload from `Game.performInternalPart2`.
+// SCOPE: Goblins turn start, war cards, tribe activation, combat, Hex, and related action dispatch arms.
 // DEPENDS: vast.Game, Continue, Action; mix into Game only (bytecode offload from monolithic matcher).
 // LINKS: M-VAST-GAME
 // ROLE: RUNTIME
+// MAP_MODE: LOCALS
 // END_MODULE_CONTRACT
+//
+// START_MODULE_MAP
+// GameGoblinsSupport - Goblins PartialFunction extracted from performInternalPart2 for JVM bytecode limit
+// goblinDispatchPart2 - Goblins action routing delegated via lift from performInternalPart2
+// END_MODULE_MAP
+//
+// START_CHANGE_SUMMARY
+// LAST_CHANGE: v0.1.0 - Extracted Goblins dispatch to reduce bytecode pressure inside Game.performInternalPart2.
+// END_CHANGE_SUMMARY
 package vast
 
 import hrf.colmat._
